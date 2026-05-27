@@ -1,0 +1,351 @@
+"""Dental video learning platform GraphQL API"""
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Health {
+  ok: Boolean!
+  service: String!
+  version: String!
+}
+
+type DashboardStats {
+  videosTotal: Int!
+  learningPathsTotal: Int!
+  quizzesTotal: Int!
+  completionsThisMonth: Int!
+  watchHoursThisMonth: Float!
+  activeLearners: Int!
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum VideoCategory {
+  ENDODONTICS
+  PERIODONTICS
+  PROSTHODONTICS
+  ORAL_SURGERY
+  IMPLANT
+  ORTHODONTICS
+  PEDIATRIC
+  RADIOLOGY
+  INFECTION_CONTROL
+  COMMUNICATION
+}
+
+enum LearningActivityKind {
+  PROGRESS_UPDATED
+  NOTE_CREATED
+  BOOKMARK_TOGGLED
+  PATH_ENROLLED
+  QUIZ_SUBMITTED
+}
+
+type Instructor {
+  id: ID!
+  name: String!
+  title: String!
+  specialty: String!
+  bio: String!
+  avatarUrl: String!
+  videoCount: Int!
+}
+
+type Video {
+  id: ID!
+  title: String!
+  description: String!
+  category: VideoCategory!
+  procedure: String!
+  skillLevel: SkillLevel!
+  durationSec: Int!
+  thumbnailUrl: String!
+  videoUrl: String!
+  instructorId: ID!
+  instructorName: String
+  tags: [String!]!
+  viewCount: Int!
+  publishedAt: String!
+  featured: Boolean!
+}
+
+type LearningPath {
+  id: ID!
+  title: String!
+  description: String!
+  category: VideoCategory!
+  skillLevel: SkillLevel!
+  videoIds: [ID!]!
+  estimatedMinutes: Int!
+  enrolledCount: Int!
+  certificateTitle: String!
+}
+
+type WatchProgress {
+  id: ID!
+  videoId: ID!
+  learnerId: ID!
+  positionSec: Int!
+  completed: Boolean!
+  updatedAt: String!
+}
+
+type VideoNote {
+  id: ID!
+  videoId: ID!
+  learnerId: ID!
+  timestampSec: Int!
+  body: String!
+  createdAt: String!
+}
+
+type QuizChoice {
+  id: ID!
+  label: String!
+}
+
+type QuizQuestion {
+  id: ID!
+  prompt: String!
+  choices: [QuizChoice!]!
+  correctIndex: Int!
+}
+
+type Quiz {
+  id: ID!
+  videoId: ID
+  title: String!
+  passingScore: Int!
+  questions: [QuizQuestion!]!
+}
+
+type QuizAttempt {
+  id: ID!
+  quizId: ID!
+  learnerId: ID!
+  score: Int!
+  passed: Boolean!
+  completedAt: String!
+}
+
+type Bookmark {
+  id: ID!
+  videoId: ID!
+  learnerId: ID!
+  createdAt: String!
+}
+
+type Certificate {
+  id: ID!
+  pathId: ID!
+  learnerId: ID!
+  title: String!
+  issuedAt: String!
+}
+
+type PageInfo {
+  total: Int!
+  page: Int!
+  pageSize: Int!
+  totalPages: Int!
+}
+
+type VideoPage {
+  items: [Video!]!
+  pageInfo: PageInfo!
+}
+
+type LearningActivityEvent {
+  kind: LearningActivityKind!
+  learnerId: ID!
+  videoId: ID
+  pathId: ID
+  quizId: ID
+  message: String!
+  occurredAt: String!
+}
+
+input UpdateWatchProgressInput {
+  videoId: ID!
+  learnerId: ID!
+  positionSec: Int!
+  completed: Boolean
+}
+
+input CreateVideoNoteInput {
+  videoId: ID!
+  learnerId: ID!
+  timestampSec: Int!
+  body: String!
+}
+
+input SubmitQuizAttemptInput {
+  quizId: ID!
+  learnerId: ID!
+  answers: [Int!]!
+}
+
+# --- SaaS (multi-tenant) ---
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum PlanTier {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  avatarUrl: String
+}
+
+type Organization {
+  id: ID!
+  name: String!
+  slug: String!
+  planTier: PlanTier!
+  subscriptionStatus: SubscriptionStatus!
+  seatCount: Int!
+  timezone: String!
+  memberCount: Int!
+  createdAt: String!
+}
+
+type TeamMember {
+  id: ID!
+  user: User!
+  role: MemberRole!
+  joinedAt: String!
+  lastActiveAt: String!
+}
+
+type UsageSummary {
+  members: Int!
+  membersLimit: Int!
+  videos: Int!
+  videosLimit: Int!
+  apiCallsThisMonth: Int!
+  apiCallsLimit: Int!
+  consultTokensMonth: Int!
+}
+
+type Session {
+  user: User!
+  organization: Organization!
+  role: MemberRole!
+}
+
+input UpdateOrganizationInput {
+  name: String
+  slug: String
+  seatCount: Int
+  timezone: String
+}
+
+# --- AI Board (clinic management analytics) ---
+type AnalyticsKpi {
+  label: String!
+  value: Float!
+  unit: String
+  trendPct: Float
+}
+
+type CategoryMetric {
+  category: VideoCategory!
+  count: Int!
+}
+
+type VideoMetric {
+  videoId: ID!
+  title: String!
+  views: Int!
+  completions: Int!
+}
+
+type AnalyticsBoard {
+  periodDays: Int!
+  kpis: [AnalyticsKpi!]!
+  watchHoursByWeek: [Float!]!
+  completionsByCategory: [CategoryMetric!]!
+  topVideos: [VideoMetric!]!
+  learnerEngagementScore: Float!
+}
+
+type AnalyticsInsight {
+  summary: String!
+  strengths: [String!]!
+  risks: [String!]!
+  recommendations: [String!]!
+  generatedAt: String!
+}
+
+type Query {
+  health: Health!
+  dashboard: DashboardStats!
+  currentSession: Session
+  organization: Organization!
+  usageSummary: UsageSummary!
+  teamMembers: [TeamMember!]!
+  analyticsBoard(periodDays: Int = 30): AnalyticsBoard!
+  videos(
+    category: VideoCategory
+    skillLevel: SkillLevel
+    search: String
+    page: Int
+    pageSize: Int
+  ): VideoPage!
+  video(id: ID!): Video
+  featuredVideos: [Video!]!
+  instructors: [Instructor!]!
+  instructor(id: ID!): Instructor
+  learningPaths(category: VideoCategory, skillLevel: SkillLevel): [LearningPath!]!
+  learningPath(id: ID!): LearningPath
+  myProgress(learnerId: ID!): [WatchProgress!]!
+  myBookmarks(learnerId: ID!): [Bookmark!]!
+  videoNotes(videoId: ID!, learnerId: ID!): [VideoNote!]!
+  quizzes(videoId: ID): [Quiz!]!
+  quiz(id: ID!): Quiz
+  myQuizAttempts(learnerId: ID!): [QuizAttempt!]!
+  myCertificates(learnerId: ID!): [Certificate!]!
+}
+
+type Mutation {
+  updateOrganization(input: UpdateOrganizationInput!): Organization!
+  generateAnalyticsInsight(periodDays: Int = 30): AnalyticsInsight!
+  updateWatchProgress(input: UpdateWatchProgressInput!): WatchProgress!
+  createVideoNote(input: CreateVideoNoteInput!): VideoNote!
+  deleteVideoNote(id: ID!): Boolean!
+  toggleBookmark(videoId: ID!, learnerId: ID!): Bookmark
+  enrollLearningPath(pathId: ID!, learnerId: ID!): LearningPath!
+  submitQuizAttempt(input: SubmitQuizAttemptInput!): QuizAttempt!
+}
+
+type Subscription {
+  """Dashboard stats refresh (reserved for live analytics)"""
+  dashboardUpdated: DashboardStats!
+  """Learner watch progress updates"""
+  progressUpdated(learnerId: ID!): WatchProgress!
+  """Learning activity stream (progress, notes, bookmarks, enroll, quiz)"""
+  learningActivity(learnerId: ID!): LearningActivityEvent!
+}

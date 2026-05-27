@@ -1,0 +1,26 @@
+query CurrentSession {
+  currentSession {
+    user { id email name }
+    organization { id name slug planTier subscriptionStatus seatCount memberCount }
+    role
+  }
+}
+
+query OrganizationSettings {
+  organization {
+    id name slug planTier subscriptionStatus seatCount timezone memberCount createdAt
+  }
+  usageSummary {
+    members membersLimit videos videosLimit apiCallsThisMonth apiCallsLimit consultTokensMonth
+  }
+  teamMembers {
+    id role joinedAt
+    user { id email name }
+  }
+}
+
+mutation UpdateOrganization($input: UpdateOrganizationInput!) {
+  updateOrganization(input: $input) {
+    id name slug seatCount timezone
+  }
+}

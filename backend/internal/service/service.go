@@ -1,0 +1,56 @@
+package service
+
+import (
+	"context"
+
+	"github.com/pluszero/dental-video-api/internal/config"
+	"github.com/pluszero/dental-video-api/internal/openai"
+	"github.com/pluszero/dental-video-api/internal/realtime"
+	"github.com/pluszero/dental-video-api/internal/storage"
+	"github.com/pluszero/dental-video-api/internal/store"
+	"github.com/pluszero/dental-video-api/internal/store/postgres"
+)
+
+// Service is the application boundary for GraphQL and HTTP handlers.
+type Service struct {
+	Cfg    config.Config
+	Memory *store.Store
+	PG     *postgres.DB
+	S3       *storage.S3
+	OpenAI   *openai.Client
+	Realtime *realtime.Hub
+}
+
+func New(cfg config.Config) (*Service, error) {
+	svc := &Service{Cfg: cfg, OpenAI: openai.New(cfg), Realtime: realtime.New()}
+	var err error
+	svc.S3, err = storage.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+	if cfg.EnableMemoryStore {
+		svc.Memory = store.New()
+		return svc, nil
+	}
+	svc.PG, err = postgres.Connect(cfg.DatabaseURL)
+	if err != nil {
+		return nil, err
+	}
+	if err := svc.PG.Migrate(); err != nil {
+		return nil, err
+	}
+	if err := svc.PG.SeedIfEmpty(context.Background()); err != nil {
+		return nil, err
+	}
+	return svc, nil
+}
+
+func (s *Service) Close() {
+	if s.PG != nil {
+		s.PG.Close()
+	}
+}
+
+func (s *Service) UsePostgres() bool {
+	return s.PG != nil
+}

@@ -1,0 +1,9 @@
+node_modules/
+frontend/.next/
+frontend/out/
+backend/bin/
+*.exe
+.env
+.env.local
+.env.railway
+.DS_Store
