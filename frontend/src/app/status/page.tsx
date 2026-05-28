@@ -46,10 +46,21 @@ export default async function StatusPage() {
         </ul>
         {s.postgres === false ? (
           <div className="alert" style={{ marginTop: '0.75rem' }}>
-            <p>
-              PostgreSQL is not connected. SaaS login requires <code>DATABASE_URL</code> on the same
-              Railway service (Postgres plugin ? Reference). Redeploy after adding it.
-            </p>
+            <p>{s.setup?.hint ?? 'PostgreSQL is not connected.'}</p>
+            <ul className="metric-list" style={{ marginTop: '0.5rem' }}>
+              <li>
+                <span>DATABASE_URL</span>
+                <code>{s.setup?.databaseUrl ?? 'unknown'}</code>
+              </li>
+              <li>
+                <span>DATABASE_PRIVATE_URL</span>
+                <code>{s.setup?.databasePrivateUrl ?? 'unknown'}</code>
+              </li>
+              <li>
+                <span>JWT_SECRET</span>
+                <code>{s.setup?.jwtSecret ?? 'unknown'}</code>
+              </li>
+            </ul>
           </div>
         ) : null}
         {s.error ? <p className="alert">{s.error}</p> : null}

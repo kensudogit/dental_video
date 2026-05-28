@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/pluszero/dental-video-api/internal/config"
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/service"
 )
@@ -34,11 +35,12 @@ func (h *Handler) Root(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Status(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"service": "dental-video-api",
-		"ok":      true,
+		"service":  "dental-video-api",
+		"ok":       true,
 		"postgres": h.svc.UsePostgres(),
-		"s3":      h.svc.S3 != nil,
-		"openai":  h.svc.OpenAI != nil,
+		"s3":       h.svc.S3 != nil,
+		"openai":   h.svc.OpenAI != nil,
+		"setup":    config.SetupStatus(h.svc.UsePostgres(), h.svc.Cfg.DatabaseSource),
 	})
 }
 

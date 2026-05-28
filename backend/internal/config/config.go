@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 type Config struct {
 	Port              string
 	DatabaseURL       string
+	DatabaseSource    string
 	JWTSecret         string
 	TokenTTLHours     int
 	S3Endpoint        string
@@ -26,7 +28,7 @@ type Config struct {
 }
 
 func Load() Config {
-	db := normalizeDatabaseURL(strings.TrimSpace(os.Getenv("DATABASE_URL")))
+	db, source := resolveDatabaseURL()
 	jwt := strings.TrimSpace(os.Getenv("JWT_SECRET"))
 	if jwt == "" {
 		jwt = "dev-only-change-in-production"
@@ -54,9 +56,15 @@ func Load() Config {
 	if model == "" {
 		model = "gpt-4o-mini"
 	}
+	memoryExplicit := os.Getenv("USE_MEMORY_STORE") == "true"
+	enableMemory := db == "" && (!IsRailway() || memoryExplicit)
+	if memoryExplicit {
+		enableMemory = true
+	}
 	return Config{
 		Port:              port,
 		DatabaseURL:       db,
+		DatabaseSource:    source,
 		JWTSecret:         jwt,
 		TokenTTLHours:     ttl,
 		S3Endpoint:        strings.TrimSpace(os.Getenv("S3_ENDPOINT")),
@@ -70,7 +78,7 @@ func Load() Config {
 		OpenAIModel:       model,
 		AllowedOrigins:    origins,
 		AppPublicURL:      strings.TrimRight(strings.TrimSpace(envOr("APP_PUBLIC_URL", "http://localhost:3000")), "/"),
-		EnableMemoryStore: db == "" || os.Getenv("USE_MEMORY_STORE") == "true",
+		EnableMemoryStore: enableMemory,
 	}
 }
 
@@ -82,11 +90,68 @@ func (c Config) OpenAIEnabled() bool {
 	return c.OpenAIAPIKey != ""
 }
 
+func IsRailway() bool {
+	return os.Getenv("RAILWAY_ENVIRONMENT") != "" ||
+		os.Getenv("RAILWAY_PROJECT_ID") != "" ||
+		os.Getenv("RAILWAY_SERVICE_ID") != ""
+}
+
 func envOr(key, def string) string {
 	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
 		return v
 	}
 	return def
+}
+
+func envPresence(key string) string {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return "empty"
+	}
+	if strings.Contains(raw, "${{") {
+		return "unresolved"
+	}
+	return "set"
+}
+
+// SetupStatus describes SaaS env configuration (no secrets).
+func SetupStatus(postgresConnected bool, dbSource string) map[string]any {
+	out := map[string]any{
+		"postgres":             postgresConnected,
+		"databaseSource":       dbSource,
+		"databaseUrl":          envPresence("DATABASE_URL"),
+		"databasePrivateUrl":   envPresence("DATABASE_PRIVATE_URL"),
+		"jwtSecret":            ternary(envPresence("JWT_SECRET") == "set", "set", "empty"),
+		"railway":              IsRailway(),
+	}
+	if !postgresConnected && IsRailway() {
+		out["hint"] = "Railway app service → Variables → DATABASE_URL = Postgres Reference, JWT_SECRET = random string → Redeploy"
+	}
+	return out
+}
+
+func ternary(cond bool, a, b string) string {
+	if cond {
+		return a
+	}
+	return b
+}
+
+func resolveDatabaseURL() (string, string) {
+	keys := []string{
+		"DATABASE_URL",
+		"DATABASE_PRIVATE_URL",
+		"POSTGRES_URL",
+		"POSTGRES_PRIVATE_URL",
+	}
+	for _, key := range keys {
+		raw := strings.TrimSpace(os.Getenv(key))
+		if raw == "" || strings.Contains(raw, "${{") {
+			continue
+		}
+		return normalizeDatabaseURL(raw), key
+	}
+	return "", ""
 }
 
 // normalizeDatabaseURL appends sslmode=require on Railway when the URL omits it.
@@ -97,14 +162,18 @@ func normalizeDatabaseURL(raw string) string {
 	if strings.Contains(raw, "sslmode=") {
 		return raw
 	}
-	onRailway := os.Getenv("RAILWAY_ENVIRONMENT") != "" ||
-		os.Getenv("RAILWAY_PROJECT_ID") != "" ||
-		strings.Contains(strings.ToLower(raw), "railway")
-	if !onRailway {
+	if !IsRailway() && !strings.Contains(strings.ToLower(raw), "railway") {
 		return raw
 	}
 	if strings.Contains(raw, "?") {
 		return raw + "&sslmode=require"
 	}
 	return raw + "?sslmode=require"
+}
+
+// RailwayDatabaseRequiredError is returned when Postgres is missing on Railway.
+func RailwayDatabaseRequiredError() error {
+	return fmt.Errorf(
+		"DATABASE_URL is required on Railway: open the app service (not Postgres) → Variables → New Variable → Reference → Postgres DATABASE_URL, set JWT_SECRET, then Redeploy",
+	)
 }

@@ -1,5 +1,15 @@
 import { isUnifiedDeploy, resolveApiUrl } from '@/lib/resolve-api-url'
 
+export type SetupStatus = {
+  postgres?: boolean
+  databaseSource?: string
+  databaseUrl?: string
+  databasePrivateUrl?: string
+  jwtSecret?: string
+  railway?: boolean
+  hint?: string
+}
+
 export type StatusPayload = {
   service: string
   ok: boolean
@@ -8,6 +18,7 @@ export type StatusPayload = {
   graphqlProxy: string
   unified: boolean
   postgres?: boolean
+  setup?: SetupStatus
   health: { ok?: boolean; service?: string; version?: string }
   error?: string
 }
@@ -19,6 +30,7 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
   let health: StatusPayload['health'] = {}
   let apiReachable = false
   let postgres: boolean | undefined
+  let setup: SetupStatus | undefined
   let error: string | undefined
 
   try {
@@ -28,8 +40,12 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
 
     const statusRes = await fetch(`${apiUrl}/status`, { cache: 'no-store' })
     if (statusRes.ok) {
-      const statusJson = (await statusRes.json()) as { postgres?: boolean }
+      const statusJson = (await statusRes.json()) as {
+        postgres?: boolean
+        setup?: SetupStatus
+      }
       postgres = statusJson.postgres
+      setup = statusJson.setup
     }
   } catch (e) {
     error = e instanceof Error ? e.message : String(e)
@@ -42,6 +58,7 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
     graphqlProxy: '/graphql',
     unified,
     postgres,
+    setup,
     health,
     error,
   }
@@ -54,7 +71,8 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
   if (apiReachable && postgres === false) {
     payload.apiUrlNote =
       (payload.apiUrlNote ? payload.apiUrlNote + ' ' : '') +
-      'PostgreSQL is not connected. Set DATABASE_URL on Railway for SaaS login.'
+      (setup?.hint ??
+        'PostgreSQL is not connected. Set DATABASE_URL (Postgres Reference) on the Railway app service.')
   }
 
   return payload

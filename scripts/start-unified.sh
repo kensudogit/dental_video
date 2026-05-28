@@ -34,10 +34,22 @@ export API_INTERNAL_PORT="${API_PORT}"
 export API_URL="http://127.0.0.1:${API_PORT}"
 export UNIFIED_DEPLOY=1
 
+# Railway Postgres plugin often exposes DATABASE_PRIVATE_URL first.
+if [ -z "${DATABASE_URL:-}" ] && [ -n "${DATABASE_PRIVATE_URL:-}" ]; then
+  export DATABASE_URL="${DATABASE_PRIVATE_URL}"
+  echo "[unified] using DATABASE_PRIVATE_URL as DATABASE_URL"
+fi
+
 echo "[unified] web=${WEB_PORT} api=${API_PORT}"
-echo "[unified] DATABASE_URL set=$([ -n "${DATABASE_URL:-}" ] && echo yes || echo no)"
+echo "[unified] DATABASE_URL=${DATABASE_URL:+set}${DATABASE_URL:-empty}"
+echo "[unified] DATABASE_PRIVATE_URL=${DATABASE_PRIVATE_URL:+set}${DATABASE_PRIVATE_URL:-empty}"
+echo "[unified] JWT_SECRET=${JWT_SECRET:+set}${JWT_SECRET:-empty}"
 if [ -z "${DATABASE_URL:-}" ]; then
-  echo "[unified] WARNING: DATABASE_URL is not set — SaaS login will fail until Postgres Reference is added on Railway"
+  echo "[unified] ERROR: DATABASE_URL is required — Railway app service ? Variables ? Reference Postgres DATABASE_URL"
+  exit 1
+fi
+if [ -z "${JWT_SECRET:-}" ] || [ "${JWT_SECRET}" = "dev-only-change-in-production" ]; then
+  echo "[unified] WARNING: set a strong JWT_SECRET on Railway"
 fi
 
 echo "[unified] starting Go API..."

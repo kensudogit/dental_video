@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"os"
 
 	"github.com/pluszero/dental-video-api/internal/config"
 	"github.com/pluszero/dental-video-api/internal/openai"
@@ -28,7 +29,10 @@ func New(cfg config.Config) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg.EnableMemoryStore {
+	if cfg.DatabaseURL == "" {
+		if config.IsRailway() && os.Getenv("USE_MEMORY_STORE") != "true" {
+			return nil, config.RailwayDatabaseRequiredError()
+		}
 		svc.Memory = store.New()
 		return svc, nil
 	}
