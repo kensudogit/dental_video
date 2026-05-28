@@ -37,6 +37,12 @@ export default async function StatusPage() {
               <code>{s.health.version}</code>
             </li>
           ) : null}
+          {typeof s.postgres === 'boolean' ? (
+            <li>
+              <span>PostgreSQL</span>
+              <code>{s.postgres ? 'connected' : 'not configured'}</code>
+            </li>
+          ) : null}
         </ul>
         {s.error ? <p className="alert">{s.error}</p> : null}
         {!s.ok ? <p className="muted small">{ui.statusFailHint}</p> : null}

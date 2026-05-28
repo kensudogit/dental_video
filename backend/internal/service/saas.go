@@ -9,7 +9,7 @@ import (
 
 func (s *Service) GetOrganization(ctx context.Context) (models.Organization, error) {
 	if s.PG == nil {
-		return models.Organization{}, tenant.ErrForbidden
+		return models.Organization{}, tenant.ErrUnauthorized
 	}
 	oid, err := s.OrgID(ctx)
 	if err != nil {
@@ -25,7 +25,7 @@ func (s *Service) GetOrganization(ctx context.Context) (models.Organization, err
 
 func (s *Service) UsageSummary(ctx context.Context) (models.UsageSummary, error) {
 	if s.PG == nil {
-		return models.UsageSummary{}, tenant.ErrForbidden
+		return models.UsageSummary{}, tenant.ErrUnauthorized
 	}
 	oid, err := s.OrgID(ctx)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *Service) UsageSummary(ctx context.Context) (models.UsageSummary, error)
 
 func (s *Service) ListTeamMembers(ctx context.Context) ([]models.TeamMember, []models.User, error) {
 	if s.PG == nil {
-		return nil, nil, tenant.ErrForbidden
+		return nil, nil, tenant.ErrUnauthorized
 	}
 	oid, err := s.OrgID(ctx)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *Service) ListTeamMembers(ctx context.Context) ([]models.TeamMember, []m
 
 func (s *Service) UpdateOrganization(ctx context.Context, patch models.OrganizationPatch) (models.Organization, error) {
 	if s.PG == nil {
-		return models.Organization{}, tenant.ErrForbidden
+		return models.Organization{}, tenant.ErrUnauthorized
 	}
 	oid, err := s.OrgID(ctx)
 	if err != nil {

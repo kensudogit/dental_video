@@ -3,12 +3,23 @@
 import { useMutation, useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import {
+  CurrentSessionDocument,
   OrganizationSettingsDocument,
   UpdateOrganizationDocument,
 } from '@/lib/generated/graphql'
+import { isAuthRequiredGraphQLError, isNetworkGraphQLError } from '@/lib/graphql-errors'
+import { ui } from '@/lib/ui'
 
 export default function SettingsPage() {
+  const {
+    data: sessionData,
+    loading: sessionLoading,
+  } = useQuery(CurrentSessionDocument, { fetchPolicy: 'network-only' })
+
+  const session = sessionData?.currentSession
+
   const { data, loading, error, refetch } = useQuery(OrganizationSettingsDocument, {
+    skip: !session,
     fetchPolicy: 'network-only',
   })
   const [updateOrg, { loading: saving }] = useMutation(UpdateOrganizationDocument)
@@ -32,7 +43,12 @@ export default function SettingsPage() {
     refetch()
   }
 
-  if (loading) return <p className="muted">Loading...</p>
+  if (sessionLoading || (session && loading)) {
+    return <p className="muted">Loading...</p>
+  }
+
+  const authRequired = !session || isAuthRequiredGraphQLError(error)
+  const apiFailed = error && isNetworkGraphQLError(error)
 
   return (
     <>
@@ -41,21 +57,33 @@ export default function SettingsPage() {
         <p>Manage tenant isolation, plan, and usage.</p>
       </div>
 
-      {error ? (
+      {apiFailed ? (
         <div className="panel">
           <p className="alert">{error.message}</p>
           <p className="muted small">
             API connection failed. Check <Link href="/status">/status</Link> first, then redeploy.
           </p>
         </div>
+      ) : authRequired ? (
+        <div className="panel">
+          <p>{ui.settingsSignIn}</p>
+          <p className="muted small">{ui.settingsSignInHint}</p>
+          <Link href="/login" className="btn">
+            {ui.loginSubmit}
+          </Link>
+        </div>
+      ) : error ? (
+        <div className="panel">
+          <p className="alert">{error.message}</p>
+          <Link href="/login" className="btn">
+            {ui.loginSubmit}
+          </Link>
+        </div>
       ) : !org ? (
         <div className="panel">
-          <p>PostgreSQL mode: sign in to manage your organization.</p>
-          <p className="muted small">
-            API is connected when <Link href="/status">/status</Link> shows OK. Demo: demo@sakura-dental.jp / demo1234
-          </p>
+          <p>{ui.settingsSignIn}</p>
           <Link href="/login" className="btn">
-            Login
+            {ui.loginSubmit}
           </Link>
         </div>
       ) : (

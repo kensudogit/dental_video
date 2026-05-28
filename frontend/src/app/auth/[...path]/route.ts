@@ -3,7 +3,7 @@ import { listApiBaseCandidates } from '@/lib/resolve-api-url'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-function forwardAuthHeaders(request: Request, headers: Headers) {
+function forwardRequestHeaders(request: Request, headers: Headers) {
   const contentType = request.headers.get('content-type')
   if (contentType) headers.set('content-type', contentType)
   const accept = request.headers.get('accept')
@@ -12,23 +12,22 @@ function forwardAuthHeaders(request: Request, headers: Headers) {
   if (cookie) headers.set('cookie', cookie)
   const authorization = request.headers.get('authorization')
   if (authorization) headers.set('authorization', authorization)
-  const apiKey = request.headers.get('x-api-key')
-  if (apiKey) headers.set('x-api-key', apiKey)
 }
 
-async function proxy(request: Request): Promise<Response> {
-  const bases = listApiBaseCandidates()
+async function proxyAuth(request: Request, path: string[]): Promise<Response> {
+  const subpath = path.join('/')
   const search = new URL(request.url).search
+  const bases = listApiBaseCandidates()
 
   const headers = new Headers()
-  forwardAuthHeaders(request, headers)
+  forwardRequestHeaders(request, headers)
 
   const bodyText =
     request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text()
 
   const failures: string[] = []
   for (const base of bases) {
-    const target = `${base}/graphql${search}`
+    const target = `${base}/auth/${subpath}${search}`
     try {
       const upstream = await fetch(target, {
         method: request.method,
@@ -40,10 +39,12 @@ async function proxy(request: Request): Promise<Response> {
         failures.push(`${base}: HTTP ${upstream.status}`)
         continue
       }
-      const text = await upstream.text()
+
       const outHeaders = new Headers()
       const upstreamType = upstream.headers.get('content-type')
       if (upstreamType) outHeaders.set('content-type', upstreamType)
+
+      // Forward all Set-Cookie headers (login session).
       const setCookies =
         typeof upstream.headers.getSetCookie === 'function'
           ? upstream.headers.getSetCookie()
@@ -53,24 +54,27 @@ async function proxy(request: Request): Promise<Response> {
       for (const value of setCookies) {
         outHeaders.append('set-cookie', value)
       }
+
+      const text = await upstream.text()
       return new Response(text, { status: upstream.status, headers: outHeaders })
     } catch (err) {
       failures.push(`${base}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
-  return Response.json(
-    { errors: [{ message: `Cannot reach API (${failures.join('; ')})` }] },
-    { status: 502 },
-  )
+  return Response.json({ error: `Cannot reach API (${failures.join('; ')})` }, { status: 502 })
 }
 
-export async function GET(request: Request) {
-  return proxy(request)
+type RouteContext = { params: Promise<{ path: string[] }> }
+
+export async function GET(request: Request, context: RouteContext) {
+  const { path } = await context.params
+  return proxyAuth(request, path)
 }
 
-export async function POST(request: Request) {
-  return proxy(request)
+export async function POST(request: Request, context: RouteContext) {
+  const { path } = await context.params
+  return proxyAuth(request, path)
 }
 
 export async function OPTIONS() {
@@ -79,7 +83,7 @@ export async function OPTIONS() {
     headers: {
       'access-control-allow-origin': '*',
       'access-control-allow-methods': 'GET, POST, OPTIONS',
-      'access-control-allow-headers': 'content-type, accept, authorization, cookie, x-api-key',
+      'access-control-allow-headers': 'content-type, accept, authorization, cookie',
     },
   })
 }

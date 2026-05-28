@@ -24,3 +24,9 @@ export function getApolloClient(): ApolloClient {
   }
   return client
 }
+
+export async function resetApolloClient(): Promise<void> {
+  if (client) {
+    await client.clearStore()
+  }
+}

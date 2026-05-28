@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { apiBase } from '@/lib/api-base'
+import { resetApolloClient } from '@/lib/apollo-client'
 import { ui } from '@/lib/ui'
 
 export default function LoginPage() {
@@ -28,6 +29,7 @@ export default function LoginPage() {
         const j = await res.json().catch(() => ({}))
         throw new Error((j as { error?: string }).error ?? 'Login failed')
       }
+      await resetApolloClient()
       router.push('/settings')
       router.refresh()
     } catch (err) {
