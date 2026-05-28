@@ -14,6 +14,18 @@ export const ui = {
   navQuizzes: '\u7406\u89e3\u5ea6\u30c6\u30b9\u30c8',
   navInstructors: '\u8b1b\u5e2b',
   apiStatus: 'API \u63a5\u7d9a\u78ba\u8a8d',
+  statusPageTitle: 'API \u63a5\u7d9a\u78ba\u8a8d',
+  statusPageDesc:
+    '\u30b5\u30fc\u30d0\u5074\u304b\u3089 Go API \u3078\u306e\u63a5\u7d9a\u72b6\u614b\u3067\u3059\u3002\u7d71\u5408\u30c7\u30d7\u30ed\u30a4\u3067\u306f 127.0.0.1 \u8868\u793a\u306f\u6b63\u5e38\u3067\u3059\u3002',
+  statusApiLabel: 'GraphQL / API',
+  statusOk: '\u63a5\u7d9a OK',
+  statusNg: '\u672a\u63a5\u7d9a',
+  statusGraphql: 'Browser GraphQL',
+  statusAuth: 'Browser login',
+  statusFailHint:
+    'Deploy logs \u3067 [unified] API ready \u3092\u78ba\u8a8d\u3002DATABASE_URL \u3068 JWT_SECRET \u304c\u5fc5\u8981\u3067\u3059\u3002',
+  statusLoginHint:
+    '\u63a5\u7d9a OK \u306e\u5834\u5408\u3001\u7d44\u7e54\u8a2d\u5b9a\u306f /login \u304b\u3089\u30ed\u30b0\u30a4\u30f3\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
   graphqlError: 'GraphQL \u306b\u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093',
   dashboardTitle: '\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9',
   dashboardDesc:

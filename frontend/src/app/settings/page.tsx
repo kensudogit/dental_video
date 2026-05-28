@@ -8,7 +8,9 @@ import {
 } from '@/lib/generated/graphql'
 
 export default function SettingsPage() {
-  const { data, loading, refetch } = useQuery(OrganizationSettingsDocument, { fetchPolicy: 'network-only' })
+  const { data, loading, error, refetch } = useQuery(OrganizationSettingsDocument, {
+    fetchPolicy: 'network-only',
+  })
   const [updateOrg, { loading: saving }] = useMutation(UpdateOrganizationDocument)
 
   const org = data?.organization
@@ -39,9 +41,19 @@ export default function SettingsPage() {
         <p>Manage tenant isolation, plan, and usage.</p>
       </div>
 
-      {!org ? (
+      {error ? (
         <div className="panel">
-          <p>Sign in with PostgreSQL mode enabled.</p>
+          <p className="alert">{error.message}</p>
+          <p className="muted small">
+            API connection failed. Check <Link href="/status">/status</Link> first, then redeploy.
+          </p>
+        </div>
+      ) : !org ? (
+        <div className="panel">
+          <p>PostgreSQL mode: sign in to manage your organization.</p>
+          <p className="muted small">
+            API is connected when <Link href="/status">/status</Link> shows OK. Demo: demo@sakura-dental.jp / demo1234
+          </p>
           <Link href="/login" className="btn">
             Login
           </Link>

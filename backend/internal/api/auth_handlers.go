@@ -27,7 +27,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
-	setTokenCookie(w, payload.Token)
+	setTokenCookie(w, r, payload.Token)
 	writeJSON(w, http.StatusOK, map[string]any{"token": payload.Token, "session": payload.Session})
 }
 
@@ -51,23 +51,43 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	setTokenCookie(w, payload.Token)
+	setTokenCookie(w, r, payload.Token)
 	writeJSON(w, http.StatusOK, map[string]any{"token": payload.Token, "session": payload.Session})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{Name: "dv_token", Value: "", Path: "/", MaxAge: -1, HttpOnly: true})
+	clearTokenCookie(w, r)
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
-func setTokenCookie(w http.ResponseWriter, token string) {
+func cookieSecure(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+	return r.Header.Get("X-Forwarded-Proto") == "https"
+}
+
+func setTokenCookie(w http.ResponseWriter, r *http.Request, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "dv_token",
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   cookieSecure(r),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int((72 * time.Hour).Seconds()),
+	})
+}
+
+func clearTokenCookie(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "dv_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   cookieSecure(r),
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
 	})
 }
 

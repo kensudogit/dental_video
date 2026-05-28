@@ -3,15 +3,25 @@ import { listApiBaseCandidates } from '@/lib/resolve-api-url'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+function forwardAuthHeaders(request: Request, headers: Headers) {
+  const contentType = request.headers.get('content-type')
+  if (contentType) headers.set('content-type', contentType)
+  const accept = request.headers.get('accept')
+  if (accept) headers.set('accept', accept)
+  const cookie = request.headers.get('cookie')
+  if (cookie) headers.set('cookie', cookie)
+  const authorization = request.headers.get('authorization')
+  if (authorization) headers.set('authorization', authorization)
+  const apiKey = request.headers.get('x-api-key')
+  if (apiKey) headers.set('x-api-key', apiKey)
+}
+
 async function proxy(request: Request): Promise<Response> {
   const bases = listApiBaseCandidates()
   const search = new URL(request.url).search
 
   const headers = new Headers()
-  const contentType = request.headers.get('content-type')
-  if (contentType) headers.set('content-type', contentType)
-  const accept = request.headers.get('accept')
-  if (accept) headers.set('accept', accept)
+  forwardAuthHeaders(request, headers)
 
   const bodyText =
     request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text()
@@ -34,6 +44,8 @@ async function proxy(request: Request): Promise<Response> {
       const outHeaders = new Headers()
       const upstreamType = upstream.headers.get('content-type')
       if (upstreamType) outHeaders.set('content-type', upstreamType)
+      const setCookie = upstream.headers.get('set-cookie')
+      if (setCookie) outHeaders.set('set-cookie', setCookie)
       return new Response(text, { status: upstream.status, headers: outHeaders })
     } catch (err) {
       failures.push(`${base}: ${err instanceof Error ? err.message : String(err)}`)
@@ -60,7 +72,7 @@ export async function OPTIONS() {
     headers: {
       'access-control-allow-origin': '*',
       'access-control-allow-methods': 'GET, POST, OPTIONS',
-      'access-control-allow-headers': 'content-type, accept',
+      'access-control-allow-headers': 'content-type, accept, authorization, cookie, x-api-key',
     },
   })
 }
