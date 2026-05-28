@@ -62,10 +62,12 @@ export default function LoginPage() {
         {error ? (
           <div className="alert">
             <p>{error}</p>
-            {error.includes('postgresql') || error.includes('DATABASE_URL') ? (
+            {error.includes('postgresql') ||
+            error.includes('DATABASE_URL') ||
+            error.includes('Cannot reach API') ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>
-                Railway: Variables → add DATABASE_URL (Postgres Reference). Then check{' '}
-                <Link href="/status">/status</Link>.
+                Railway: 同一サービスの Variables に DATABASE_URL（Postgres Reference）と JWT_SECRET を設定 →
+                Redeploy → <Link href="/status">/status</Link> で PostgreSQL: connected を確認
               </p>
             ) : error.includes('timed out') || error.includes('Timeout') ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>

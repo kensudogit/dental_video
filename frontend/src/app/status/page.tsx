@@ -44,6 +44,14 @@ export default async function StatusPage() {
             </li>
           ) : null}
         </ul>
+        {s.postgres === false ? (
+          <div className="alert" style={{ marginTop: '0.75rem' }}>
+            <p>
+              PostgreSQL is not connected. SaaS login requires <code>DATABASE_URL</code> on the same
+              Railway service (Postgres plugin ? Reference). Redeploy after adding it.
+            </p>
+          </div>
+        ) : null}
         {s.error ? <p className="alert">{s.error}</p> : null}
         {!s.ok ? <p className="muted small">{ui.statusFailHint}</p> : null}
         {s.ok ? (

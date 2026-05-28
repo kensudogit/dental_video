@@ -36,6 +36,9 @@ export UNIFIED_DEPLOY=1
 
 echo "[unified] web=${WEB_PORT} api=${API_PORT}"
 echo "[unified] DATABASE_URL set=$([ -n "${DATABASE_URL:-}" ] && echo yes || echo no)"
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "[unified] WARNING: DATABASE_URL is not set — SaaS login will fail until Postgres Reference is added on Railway"
+fi
 
 echo "[unified] starting Go API..."
 PORT="${API_PORT}" /app/server &
