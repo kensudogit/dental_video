@@ -1,0 +1,3 @@
+* text=auto eol=lf
+*.sh text eol=lf
+scripts/start-unified.sh text eol=lf

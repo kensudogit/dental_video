@@ -1,8 +1,8 @@
-# Railway — Web UI + Go API in ONE service (recommended)
+# Railway: Web UI + Go API in ONE service (recommended)
 #
 # Service Settings:
-#   Root Directory     ?  leave EMPTY
-#   Config file path   ?  /railway.toml
+#   Root Directory     ->  leave EMPTY
+#   Config file path   ->  /railway.toml
 #
 # Add PostgreSQL plugin and set DATABASE_URL on this service for SaaS/login.
 
@@ -12,7 +12,7 @@ dockerfilePath = "Dockerfile.unified"
 watchPatterns = ["frontend/**", "backend/**", "graphql/**", "scripts/**", "Dockerfile.unified"]
 
 [deploy]
-healthcheckPath = "/status"
+healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 numReplicas = 1

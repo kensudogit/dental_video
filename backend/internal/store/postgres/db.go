@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -32,43 +33,87 @@ func (db *DB) Close() {
 }
 
 func (db *DB) Migrate() error {
-	entries, err := fs.ReadDir(migrations.FS, ".")
-	if err != nil {
-		return db.migrateFromDisk()
+	ctx := context.Background()
+	if _, err := db.Pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			filename TEXT PRIMARY KEY,
+			applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`); err != nil {
+		return err
 	}
-	var ran bool
+	if err := db.applyFromFS(ctx, migrations.FS); err == nil {
+		return nil
+	}
+	return db.migrateFromDisk(ctx)
+}
+
+func (db *DB) applyFromFS(ctx context.Context, filesystem fs.FS) error {
+	entries, err := fs.ReadDir(filesystem, ".")
+	if err != nil {
+		return err
+	}
+	names := make([]string, 0, len(entries))
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
 			continue
 		}
-		b, err := migrations.FS.ReadFile(e.Name())
+		names = append(names, e.Name())
+	}
+	if len(names) == 0 {
+		return fmt.Errorf("no migrations in embed FS")
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		b, err := fs.ReadFile(filesystem, name)
 		if err != nil {
 			return err
 		}
-		if _, err := db.Pool.Exec(context.Background(), string(b)); err != nil {
-			return fmt.Errorf("migration %s: %w", e.Name(), err)
+		if err := db.applyOne(ctx, name, string(b)); err != nil {
+			return err
 		}
-		ran = true
 	}
-	if ran {
-		return nil
-	}
-	return db.migrateFromDisk()
+	return nil
 }
 
-func (db *DB) migrateFromDisk() error {
+func (db *DB) migrateFromDisk(ctx context.Context) error {
 	paths := []string{"migrations/001_init.sql", "backend/migrations/001_init.sql"}
 	for _, p := range paths {
 		b, err := os.ReadFile(p)
 		if err != nil {
 			continue
 		}
-		if _, err := db.Pool.Exec(context.Background(), string(b)); err != nil {
+		name := strings.TrimPrefix(strings.TrimPrefix(p, "backend/"), "migrations/")
+		if err := db.applyOne(ctx, name, string(b)); err != nil {
 			return err
 		}
 		return nil
 	}
 	return fmt.Errorf("migrations not found")
+}
+
+func (db *DB) applyOne(ctx context.Context, filename, sql string) error {
+	var exists bool
+	if err := db.Pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE filename = $1)`,
+		filename,
+	).Scan(&exists); err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, sql); err != nil {
+		return fmt.Errorf("migration %s: %w", filename, err)
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO schema_migrations (filename) VALUES ($1)`, filename); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (db *DB) SeedIfEmpty(ctx context.Context) error {

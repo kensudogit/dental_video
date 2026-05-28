@@ -7,3 +7,4 @@ backend/bin/
 .env.local
 .env.railway
 .DS_Store
+.railway/

@@ -26,7 +26,7 @@ type Config struct {
 }
 
 func Load() Config {
-	db := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	db := normalizeDatabaseURL(strings.TrimSpace(os.Getenv("DATABASE_URL")))
 	jwt := strings.TrimSpace(os.Getenv("JWT_SECRET"))
 	if jwt == "" {
 		jwt = "dev-only-change-in-production"
@@ -87,4 +87,24 @@ func envOr(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// normalizeDatabaseURL appends sslmode=require on Railway when the URL omits it.
+func normalizeDatabaseURL(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if strings.Contains(raw, "sslmode=") {
+		return raw
+	}
+	onRailway := os.Getenv("RAILWAY_ENVIRONMENT") != "" ||
+		os.Getenv("RAILWAY_PROJECT_ID") != "" ||
+		strings.Contains(strings.ToLower(raw), "railway")
+	if !onRailway {
+		return raw
+	}
+	if strings.Contains(raw, "?") {
+		return raw + "&sslmode=require"
+	}
+	return raw + "?sslmode=require"
 }

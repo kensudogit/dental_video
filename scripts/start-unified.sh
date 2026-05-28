@@ -35,6 +35,7 @@ export API_URL="http://127.0.0.1:${API_PORT}"
 export UNIFIED_DEPLOY=1
 
 echo "[unified] web=${WEB_PORT} api=${API_PORT}"
+echo "[unified] DATABASE_URL set=$([ -n "${DATABASE_URL:-}" ] && echo yes || echo no)"
 
 echo "[unified] starting Go API..."
 PORT="${API_PORT}" /app/server &
@@ -43,7 +44,7 @@ API_PID=$!
 echo "[unified] waiting for API /health..."
 ready=0
 i=0
-while [ "$i" -lt 90 ]; do
+while [ "$i" -lt 120 ]; do
   if curl -sf "http://127.0.0.1:${API_PORT}/health" >/dev/null 2>&1; then
     ready=1
     break
@@ -58,7 +59,7 @@ while [ "$i" -lt 90 ]; do
 done
 
 if [ "$ready" -ne 1 ]; then
-  echo "[unified] ERROR: Go API not ready on 127.0.0.1:${API_PORT} after 45s"
+  echo "[unified] ERROR: Go API not ready on 127.0.0.1:${API_PORT} after 60s"
   kill "$API_PID" 2>/dev/null || true
   exit 1
 fi
