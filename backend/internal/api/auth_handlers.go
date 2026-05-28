@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -29,13 +30,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
-	payload, err := h.svc.Login(r.Context(), body.Email, body.Password)
+	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
+	defer cancel()
+	payload, err := h.svc.Login(ctx, body.Email, body.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, postgres.ErrInvalidCredentials):
 			writeError(w, http.StatusUnauthorized, "invalid credentials")
 		case errors.Is(err, tenant.ErrUnauthorized):
 			writeError(w, http.StatusUnauthorized, "invalid credentials")
+		case errors.Is(err, context.DeadlineExceeded):
+			writeError(w, http.StatusGatewayTimeout, "login timed out — check DATABASE_URL")
 		default:
 			writeError(w, http.StatusInternalServerError, "login failed")
 		}

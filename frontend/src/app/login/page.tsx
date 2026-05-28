@@ -1,14 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { apiBase } from '@/lib/api-base'
-import { resetApolloClient } from '@/lib/apollo-client'
 import { ui } from '@/lib/ui'
 
+const LOGIN_TIMEOUT_MS = 20000
+
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('demo@sakura-dental.jp')
   const [password, setPassword] = useState('demo1234')
   const [error, setError] = useState<string | null>(null)
@@ -24,17 +23,20 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(LOGIN_TIMEOUT_MS),
       })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         throw new Error((j as { error?: string }).error ?? 'Login failed')
       }
-      await resetApolloClient()
-      router.push('/settings')
-      router.refresh()
+      // Full navigation avoids Apollo/router hangs after login.
+      window.location.assign('/settings')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
-    } finally {
+      if (err instanceof Error && err.name === 'TimeoutError') {
+        setError('Login timed out. Check /status and DATABASE_URL on Railway, then retry.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Login failed')
+      }
       setBusy(false)
     }
   }
@@ -64,6 +66,10 @@ export default function LoginPage() {
               <p className="muted small" style={{ marginTop: '0.5rem' }}>
                 Railway: Variables → add DATABASE_URL (Postgres Reference). Then check{' '}
                 <Link href="/status">/status</Link>.
+              </p>
+            ) : error.includes('timed out') || error.includes('Timeout') ? (
+              <p className="muted small" style={{ marginTop: '0.5rem' }}>
+                <Link href="/status">/status</Link> で PostgreSQL: connected を確認してください。
               </p>
             ) : error === 'invalid credentials' ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>

@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pluszero/dental-video-api/migrations"
@@ -17,11 +18,18 @@ type DB struct {
 }
 
 func Connect(databaseURL string) (*DB, error) {
-	pool, err := pgxpool.New(context.Background(), databaseURL)
+	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, err
 	}
-	if err := pool.Ping(context.Background()); err != nil {
+	cfg.ConnConfig.ConnectTimeout = 10 * time.Second
+	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, err
 	}

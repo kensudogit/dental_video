@@ -1,4 +1,5 @@
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
+import { fetchUpstream } from '@/lib/proxy-fetch'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,7 @@ async function proxy(request: Request): Promise<Response> {
   for (const base of bases) {
     const target = `${base}/graphql${search}`
     try {
-      const upstream = await fetch(target, {
+      const upstream = await fetchUpstream(target, {
         method: request.method,
         headers,
         body: bodyText,

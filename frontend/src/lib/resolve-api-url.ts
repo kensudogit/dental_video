@@ -131,12 +131,14 @@ export function listApiBaseCandidates(): string[] {
     }
   }
 
-  if (isRailway()) {
+  if (isRailway() && !isUnifiedDeploy()) {
     add(railwayInternalApiUrl())
   }
 
-  add(resolveApiUrl())
-  add('http://localhost:8080')
+  if (!isUnifiedDeploy()) {
+    add(resolveApiUrl())
+    add('http://localhost:8080')
+  }
   return [...seen]
 }
 
