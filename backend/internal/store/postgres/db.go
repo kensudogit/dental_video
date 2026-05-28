@@ -121,8 +121,10 @@ func (db *DB) SeedIfEmpty(ctx context.Context) error {
 	if err := db.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM organizations`).Scan(&n); err != nil {
 		return err
 	}
-	if n > 0 {
-		return nil
+	if n == 0 {
+		if err := seedDemo(ctx, db); err != nil {
+			return err
+		}
 	}
-	return seedDemo(ctx, db)
+	return ensureDemoCredentials(ctx, db)
 }

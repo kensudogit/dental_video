@@ -57,7 +57,21 @@ export default function LoginPage() {
             {busy ? ui.loginBusy : ui.loginSubmit}
           </button>
         </form>
-        {error ? <p className="alert">{error}</p> : null}
+        {error ? (
+          <div className="alert">
+            <p>{error}</p>
+            {error.includes('postgresql') || error.includes('DATABASE_URL') ? (
+              <p className="muted small" style={{ marginTop: '0.5rem' }}>
+                Railway: Variables → add DATABASE_URL (Postgres Reference). Then check{' '}
+                <Link href="/status">/status</Link>.
+              </p>
+            ) : error === 'invalid credentials' ? (
+              <p className="muted small" style={{ marginTop: '0.5rem' }}>
+                Demo: demo@sakura-dental.jp / demo1234 — redeploy after DATABASE_URL is set so the demo account is seeded.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <p className="muted small" style={{ marginTop: '1rem' }}>
           {ui.loginDemoHint}
         </p>

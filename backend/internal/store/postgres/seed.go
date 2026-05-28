@@ -2,16 +2,122 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/pluszero/dental-video-api/internal/auth"
 )
+
+const demoEmail = "demo@sakura-dental.jp"
+const demoPassword = "demo1234"
+
+func ensureDemoCredentials(ctx context.Context, db *DB) error {
+	hash, err := auth.HashPassword(demoPassword)
+	if err != nil {
+		return err
+	}
+
+	var orgDemo bool
+	if err := db.Pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM organizations WHERE id='org_demo')`).Scan(&orgDemo); err != nil {
+		return err
+	}
+	if !orgDemo {
+		if err := insertDemoOrg(ctx, db, hash); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	var userID string
+	err = db.Pool.QueryRow(ctx, `SELECT id FROM users WHERE LOWER(email)=$1`, demoEmail).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return insertDemoUser(ctx, db, hash)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec(ctx, `UPDATE users SET password_hash=$1 WHERE id=$2`, hash, userID)
+	return err
+}
+
+func insertDemoOrg(ctx context.Context, db *DB, hash string) error {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	orgID := "org_demo"
+	userID := "user_demo"
+	slug := "sakura-dental"
+	var slugTaken bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM organizations WHERE slug=$1 AND id<>$2)`, slug, orgID).Scan(&slugTaken); err != nil {
+		return err
+	}
+	if slugTaken {
+		slug = "sakura-dental-demo"
+	}
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO organizations (id, name, slug, plan_tier, subscription_status, seat_count, timezone)
+		VALUES ($1, $2, $3, 'PRO', 'ACTIVE', 10, 'Asia/Tokyo')
+		ON CONFLICT (id) DO NOTHING`,
+		orgID, "\u6c37\u82b1\u7c38\u6b6f\u79d1\u30af\u30ea\u30cb\u30c3\u30af", slug)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO users (id, email, name, password_hash) VALUES ($1, $2, $3, $4)
+		ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+		userID, demoEmail, "\u7530\u4e2d \u5065\u4e00", hash)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO team_members (id, org_id, user_id, role) VALUES ($1, $2, $3, 'OWNER')
+		ON CONFLICT (org_id, user_id) DO NOTHING`,
+		"tm_demo", orgID, userID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO usage_counters (org_id) VALUES ($1) ON CONFLICT (org_id) DO NOTHING`, orgID)
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func insertDemoUser(ctx context.Context, db *DB, hash string) error {
+	userID := "user_demo"
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	_, err = tx.Exec(ctx, `
+		INSERT INTO users (id, email, name, password_hash) VALUES ($1, $2, $3, $4)
+		ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
+		userID, demoEmail, "\u7530\u4e2d \u5065\u4e00", hash)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO team_members (id, org_id, user_id, role) VALUES ($1, 'org_demo', $2, 'OWNER')
+		ON CONFLICT (org_id, user_id) DO NOTHING`,
+		"tm_demo", userID)
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
 
 func seedDemo(ctx context.Context, db *DB) error {
 	now := time.Now()
 	orgID := "org_demo"
 	userID := "user_demo"
-	hash, err := auth.HashPassword("demo1234")
+	hash, err := auth.HashPassword(demoPassword)
 	if err != nil {
 		return err
 	}

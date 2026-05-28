@@ -2,11 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/pluszero/dental-video-api/internal/service"
 	"github.com/pluszero/dental-video-api/internal/store/postgres"
+	"github.com/pluszero/dental-video-api/internal/tenant"
 )
 
 type AuthHandler struct {
@@ -14,6 +16,11 @@ type AuthHandler struct {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if !h.svc.UsePostgres() {
+		writeError(w, http.StatusServiceUnavailable, "postgresql not configured — set DATABASE_URL on Railway")
+		return
+	}
+
 	var body struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -24,7 +31,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	payload, err := h.svc.Login(r.Context(), body.Email, body.Password)
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "invalid credentials")
+		switch {
+		case errors.Is(err, postgres.ErrInvalidCredentials):
+			writeError(w, http.StatusUnauthorized, "invalid credentials")
+		case errors.Is(err, tenant.ErrUnauthorized):
+			writeError(w, http.StatusUnauthorized, "invalid credentials")
+		default:
+			writeError(w, http.StatusInternalServerError, "login failed")
+		}
 		return
 	}
 	setTokenCookie(w, r, payload.Token)
