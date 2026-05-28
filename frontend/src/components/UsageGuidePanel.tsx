@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const STORAGE_KEY = 'dental-video-usage-guide-v3'
+const STORAGE_KEY = 'dental-video-usage-guide-v4'
 const PANEL_WIDTH = 380
 
 type GuideStep = {
@@ -23,6 +23,7 @@ const L = {
       title: '1. \u307e\u305a\u78ba\u8a8d\u3059\u308b',
       body: '\u63a5\u7d9a\u72b6\u614b\u3068\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3092\u78ba\u8a8d\u3057\u3066\u304b\u3089\u5b66\u7fd2\u3092\u59cb\u3081\u307e\u3057\u3087\u3046\u3002',
       items: [
+        '/health \u2192 Web \u751f\u5b58\u78ba\u8a8d\uFF08Railway \u30d8\u30eb\u30b9\u30c1\u30a7\u30c3\u30af\uFF09',
         '/status \u2192 API \u63a5\u7d9a\u3068 apiUrl \u3092\u78ba\u8a8d',
         '\u53f3\u4e0b\u306e\u672c\u30d1\u30cd\u30eb\uFF08\u25bc\u25b2\uFF09\u3067\u5229\u7528\u624b\u9806\u3092\u958b\u9589\u30fb\u79fb\u52d5',
         '\u30ca\u30d3: \u30db\u30fc\u30e0 / \u52d5\u753b / \u30d1\u30b9 / \u30de\u30a4\u5b66\u7fd2 / AI Board / \u8a2d\u5b9a',
@@ -43,11 +44,11 @@ const L = {
       title: '3. Railway \uFF08\u672c\u756a\u30c7\u30d7\u30ed\u30a4\uFF09',
       body: 'Go API + Next.js \u3092 1 \u30b5\u30fc\u30d3\u30b9\u3067\u516c\u958b\u3067\u304d\u307e\u3059\u3002\u8a73\u7d30\u306f docs/RAILWAY.md \u3092\u53c2\u7167\u3002',
       items: [
-        'Root Directory \u7a7a\u6b04 + Config /railway.toml\uFF08Dockerfile.unified\uFF09',
-        'PostgreSQL \u30d7\u30e9\u30b0\u30a4\u30f3 + DATABASE_URL \u53c2\u7167',
-        'JWT_SECRET \u5fc5\u9808\uFF08\u4e00\u4f53\u578b\u3067 API_URL \u306f\u4e0d\u8981\uFF09',
-        '/status \u3067 ok: true \u2192 \u30c9\u30e1\u30a4\u30f3\u3067 /login \u2192 /settings',
-        'CLI: railway login \u2192 railway init \u2192 railway up',
+        'GitHub: kensudogit/dental_video \u2192 Root \u7a7a\u6b04 + /railway.toml',
+        'PostgreSQL + DATABASE_URL \u53c2\u7167 + JWT_SECRET\uFF08API_URL \u306f\u8a2d\u5b9a\u3057\u306a\u3044\uFF09',
+        '/health \u2192 ok \u2192 /status \u2192 ok \u2192 /login',
+        'CLI: railway link -p <Project-ID> \u2192 variables set JWT_SECRET=... \u2192 up',
+        'link \u306e\u4e00\u89a7\u3067\u8ff7\u3063\u305f\u3089 Dashboard \u306e Project ID \u3092\u4f7f\u7528',
       ],
     },
     {
