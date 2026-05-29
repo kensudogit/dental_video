@@ -7,7 +7,7 @@ import { VideoDetailPageDocument, type VideoDetailPageQuery } from '@/lib/genera
 import { gqlRequest } from '@/lib/gql'
 import { DEMO_LEARNER_ID } from '@/lib/learner'
 import { formatDuration } from '@/lib/labels'
-import { graphQLConnectionHint } from '@/lib/resolve-api-url'
+import { graphQLErrorHint } from '@/lib/graphql-errors'
 import { ui } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +33,7 @@ export default async function VideoDetailPage({
     return (
       <div className="alert">
         <p>{error}</p>
-        <p>{graphQLConnectionHint()}</p>
+        <p>{graphQLErrorHint(error)}</p>
       </div>
     )
   }

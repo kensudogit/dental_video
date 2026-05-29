@@ -6,7 +6,7 @@ import { SkillBadge } from '@/components/SkillBadge'
 import { PathDetailPageDocument, type PathDetailPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'
 import { formatDuration } from '@/lib/labels'
-import { graphQLConnectionHint } from '@/lib/resolve-api-url'
+import { graphQLErrorHint } from '@/lib/graphql-errors'
 import { ui } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +28,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ id:
     return (
       <div className="alert">
         <p>{error}</p>
-        <p>{graphQLConnectionHint()}</p>
+        <p>{graphQLErrorHint(error)}</p>
       </div>
     )
   }

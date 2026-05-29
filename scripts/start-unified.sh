@@ -11,11 +11,9 @@ external_api_healthy() {
       ;;
     http://*|https://*)
       api_base="${API_URL%/}"
-      if curl -sf --max-time 8 "${api_base}/health" >/dev/null 2>&1; then
-        return 0
-      fi
-      echo "[web] external API_URL not reachable: ${api_base}/health"
-      return 1
+      body="$(curl -sf --max-time 8 "${api_base}/health" 2>/dev/null)" || return 1
+      echo "$body" | grep -q 'dental-video-api' || return 1
+      return 0
       ;;
     *)
       return 1

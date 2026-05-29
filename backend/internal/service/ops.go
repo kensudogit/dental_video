@@ -154,11 +154,11 @@ func (s *Service) PresignVideoUpload(ctx context.Context, filename, contentType 
 	if s.S3 == nil {
 		return models.UploadTarget{}, tenant.ErrForbidden
 	}
-	oid, err := s.OrgID(ctx)
+	p, err := s.requireAuth(ctx)
 	if err != nil {
 		return models.UploadTarget{}, err
 	}
-	key := s.S3.ObjectKey(oid, "videos", filename)
+	key := s.S3.ObjectKey(p.OrgID, "videos", filename)
 	url, err := s.S3.PresignPut(ctx, key, contentType, 15*time.Minute)
 	if err != nil {
 		return models.UploadTarget{}, err

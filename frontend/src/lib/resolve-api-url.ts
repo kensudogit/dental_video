@@ -180,10 +180,8 @@ export function graphQLConnectionHint(): string {
 
   if (isUnifiedDeploy()) {
     return (
-      'Unified deploy: Go API is not reachable at ' +
-      target +
-      '. Check Railway deploy logs for "[unified] API ready". ' +
-      'Remove API_URL from Railway Variables (not needed for unified).'
+      'Go API に接続できません。Railway の Deploy ログで "[unified] API ready" を確認してください。' +
+      ' Variables の API_URL は削除してください（統合デプロイでは不要）。'
     )
   }
 

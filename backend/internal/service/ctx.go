@@ -10,12 +10,21 @@ import (
 	"github.com/pluszero/dental-video-api/internal/tenant"
 )
 
+const (
+	demoOrgID  = "org_demo"
+	demoUserID = "user_demo"
+)
+
 func (s *Service) OrgID(ctx context.Context) (string, error) {
 	if p, ok := tenant.PrincipalFrom(ctx); ok && p.OrgID != "" {
 		return p.OrgID, nil
 	}
 	if s.Memory != nil {
 		return "org_memory", nil
+	}
+	if s.PG != nil {
+		// Anonymous catalog reads use seeded demo tenant (same as in-memory dev mode).
+		return demoOrgID, nil
 	}
 	return "", tenant.ErrUnauthorized
 }
@@ -27,7 +36,18 @@ func (s *Service) UserID(ctx context.Context) (string, error) {
 	if s.Memory != nil {
 		return "learner-demo", nil
 	}
+	if s.PG != nil {
+		return demoUserID, nil
+	}
 	return "", tenant.ErrUnauthorized
+}
+
+func (s *Service) requireAuth(ctx context.Context) (tenant.Principal, error) {
+	p, ok := tenant.PrincipalFrom(ctx)
+	if !ok || p.AuthVia == "" {
+		return tenant.Principal{}, tenant.ErrUnauthorized
+	}
+	return p, nil
 }
 
 func (s *Service) APIKeyLookup(prefix, secret string) (tenant.Principal, bool) {

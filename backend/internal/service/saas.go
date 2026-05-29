@@ -11,15 +11,15 @@ func (s *Service) GetOrganization(ctx context.Context) (models.Organization, err
 	if s.PG == nil {
 		return models.Organization{}, tenant.ErrUnauthorized
 	}
-	oid, err := s.OrgID(ctx)
+	p, err := s.requireAuth(ctx)
 	if err != nil {
 		return models.Organization{}, err
 	}
-	o, err := s.PG.GetOrganization(ctx, oid)
+	o, err := s.PG.GetOrganization(ctx, p.OrgID)
 	if err != nil {
 		return o, err
 	}
-	o.MemberCount, _ = s.PG.MemberCount(ctx, oid)
+	o.MemberCount, _ = s.PG.MemberCount(ctx, p.OrgID)
 	return o, nil
 }
 
@@ -27,31 +27,31 @@ func (s *Service) UsageSummary(ctx context.Context) (models.UsageSummary, error)
 	if s.PG == nil {
 		return models.UsageSummary{}, tenant.ErrUnauthorized
 	}
-	oid, err := s.OrgID(ctx)
+	p, err := s.requireAuth(ctx)
 	if err != nil {
 		return models.UsageSummary{}, err
 	}
-	return s.PG.UsageSummary(ctx, oid)
+	return s.PG.UsageSummary(ctx, p.OrgID)
 }
 
 func (s *Service) ListTeamMembers(ctx context.Context) ([]models.TeamMember, []models.User, error) {
 	if s.PG == nil {
 		return nil, nil, tenant.ErrUnauthorized
 	}
-	oid, err := s.OrgID(ctx)
+	p, err := s.requireAuth(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	return s.PG.ListTeamMembers(ctx, oid)
+	return s.PG.ListTeamMembers(ctx, p.OrgID)
 }
 
 func (s *Service) UpdateOrganization(ctx context.Context, patch models.OrganizationPatch) (models.Organization, error) {
 	if s.PG == nil {
 		return models.Organization{}, tenant.ErrUnauthorized
 	}
-	oid, err := s.OrgID(ctx)
+	p, err := s.requireAuth(ctx)
 	if err != nil {
 		return models.Organization{}, err
 	}
-	return s.PG.UpdateOrganization(ctx, oid, patch)
+	return s.PG.UpdateOrganization(ctx, p.OrgID, patch)
 }

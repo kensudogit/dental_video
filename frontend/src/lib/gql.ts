@@ -12,10 +12,26 @@ export class GraphQLClientError extends Error {
   }
 }
 
+async function serverCookieHeader(): Promise<string | undefined> {
+  if (typeof window !== 'undefined') return undefined
+  try {
+    const { headers } = await import('next/headers')
+    const h = await headers()
+    return h.get('cookie') ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 async function postGraphQL(body: string): Promise<Response> {
+  const cookie = await serverCookieHeader()
   const init: RequestInit = {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(cookie ? { cookie } : {}),
+    },
     body,
     cache: 'no-store',
   }
