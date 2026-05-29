@@ -65,10 +65,22 @@ export default function LoginPage() {
             {error.includes('postgresql') ||
             error.includes('DATABASE_URL') ||
             error.includes('Cannot reach API') ? (
-              <p className="muted small" style={{ marginTop: '0.5rem' }}>
-                Railway: 同一サービスの Variables に DATABASE_URL（Postgres Reference）と JWT_SECRET を設定 →
-                Redeploy → <Link href="/status">/status</Link> で PostgreSQL: connected を確認
-              </p>
+              <div className="muted small" style={{ marginTop: '0.5rem' }}>
+                <p>Railway（dental_video サービス → Variables）:</p>
+                <ol style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
+                  <li>
+                    <strong>+ New Variable</strong> → Name: <code>DATABASE_URL</code> →{' '}
+                    <strong>Add Reference</strong> → Postgres → DATABASE_URL
+                  </li>
+                  <li>
+                    <strong>JWT_SECRET</strong> = ランダム文字列（API キーではない）
+                  </li>
+                  <li>
+                    <strong>OPENAI_API_KEY</strong> = OpenAI 用（JWT_SECRET とは別）
+                  </li>
+                  <li>Redeploy → <Link href="/status">/status</Link> で PostgreSQL: connected</li>
+                </ol>
+              </div>
             ) : error.includes('timed out') || error.includes('Timeout') ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>
                 <Link href="/status">/status</Link> で PostgreSQL: connected を確認してください。

@@ -57,10 +57,23 @@ export default async function StatusPage() {
                 <code>{s.setup?.databasePrivateUrl ?? 'unknown'}</code>
               </li>
               <li>
+                <span>PGHOST</span>
+                <code>{s.setup?.pgHost ?? 'unknown'}</code>
+              </li>
+              <li>
                 <span>JWT_SECRET</span>
                 <code>{s.setup?.jwtSecret ?? 'unknown'}</code>
               </li>
+              <li>
+                <span>OPENAI_API_KEY</span>
+                <code>{s.setup?.openaiApiKey ?? 'unknown'}</code>
+              </li>
             </ul>
+            {s.setup?.jwtSecretWarning ? (
+              <p className="muted small" style={{ marginTop: '0.5rem' }}>
+                {s.setup.jwtSecretWarning}
+              </p>
+            ) : null}
           </div>
         ) : null}
         {s.error ? <p className="alert">{s.error}</p> : null}

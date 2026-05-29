@@ -20,7 +20,7 @@
 | ?? | ?? | ?? |
 |------|------|------|
 | `DATABASE_URL` | ?? | Postgres ? **Reference**?`${{Postgres.DATABASE_URL}}`? |
-| `JWT_SECRET` | ?? | 32 ???????????? |
+| `JWT_SECRET` | 必須 | 32 文字以上のランダム文字列（**API キー不可**。`sk-ant-` や `sk-proj-` で始まる値は誤り） |
 | `OPENAI_API_KEY` | ??? | AI Board ? |
 | `CORS_ORIGINS` | ?? | `https://<your-domain>.up.railway.app` |
 | `APP_PUBLIC_URL` | ?? | ??????? URL |
@@ -90,4 +90,20 @@ Dashboard ? **Config file path** ? `/railway.toml`?**Root Directory** ??????????
 | `frontend/railway.toml` | ???????????? |
 | `backend/railway.toml` | ???????????? |
 
-??????? `docker-compose.yml` / `npm run docker:up` ???????
+## 5. よくあるエラー
+
+| 症状 | 原因 | 対処 |
+|------|------|------|
+| `postgresql not configured` | `dental_video` サービスに `DATABASE_URL` がない | Variables → **+ New Variable** → Name: `DATABASE_URL` → **Add Reference** → Postgres → `DATABASE_URL` → Redeploy |
+| ログインが「ログイン中…」のまま | 上記 + プロキシタイムアウト | `/status` で PostgreSQL: connected を確認 |
+| `JWT_SECRET looks like an API key` | Anthropic/OpenAI キーを JWT_SECRET に設定 | JWT_SECRET をランダム文字列に変更。API キーは `OPENAI_API_KEY` へ |
+| `Cannot reach API HTTP 503` | API 起動失敗（DB 未設定） | Deploy ログで `[unified] ERROR: DATABASE_URL` を確認 |
+
+PowerShell で JWT_SECRET 生成例:
+
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+```
+
+Redeploy 後: `https://<domain>/status` → PostgreSQL: **connected** → ログイン `demo@sakura-dental.jp` / `demo1234`
+

@@ -5,7 +5,10 @@ export type SetupStatus = {
   databaseSource?: string
   databaseUrl?: string
   databasePrivateUrl?: string
+  pgHost?: string
   jwtSecret?: string
+  jwtSecretWarning?: string
+  openaiApiKey?: string
   railway?: boolean
   hint?: string
 }

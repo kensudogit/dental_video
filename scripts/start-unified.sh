@@ -43,9 +43,11 @@ fi
 echo "[unified] web=${WEB_PORT} api=${API_PORT}"
 echo "[unified] DATABASE_URL=${DATABASE_URL:+set}${DATABASE_URL:-empty}"
 echo "[unified] DATABASE_PRIVATE_URL=${DATABASE_PRIVATE_URL:+set}${DATABASE_PRIVATE_URL:-empty}"
+echo "[unified] PGHOST=${PGHOST:+set}${PGHOST:-empty}"
 echo "[unified] JWT_SECRET=${JWT_SECRET:+set}${JWT_SECRET:-empty}"
-if [ -z "${DATABASE_URL:-}" ]; then
-  echo "[unified] ERROR: DATABASE_URL is required — Railway app service ? Variables ? Reference Postgres DATABASE_URL"
+if [ -z "${DATABASE_URL:-}" ] && [ -z "${DATABASE_PRIVATE_URL:-}" ] && [ -z "${PGHOST:-}" ]; then
+  echo "[unified] ERROR: DATABASE_URL is required"
+  echo "[unified]   dental_video service ? Variables ? + New Variable ? Reference ? Postgres ? DATABASE_URL"
   exit 1
 fi
 if [ -z "${JWT_SECRET:-}" ] || [ "${JWT_SECRET}" = "dev-only-change-in-production" ]; then

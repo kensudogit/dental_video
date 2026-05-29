@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -116,18 +117,37 @@ func envPresence(key string) string {
 
 // SetupStatus describes SaaS env configuration (no secrets).
 func SetupStatus(postgresConnected bool, dbSource string) map[string]any {
+	jwt := strings.TrimSpace(os.Getenv("JWT_SECRET"))
 	out := map[string]any{
-		"postgres":             postgresConnected,
-		"databaseSource":       dbSource,
-		"databaseUrl":          envPresence("DATABASE_URL"),
-		"databasePrivateUrl":   envPresence("DATABASE_PRIVATE_URL"),
-		"jwtSecret":            ternary(envPresence("JWT_SECRET") == "set", "set", "empty"),
-		"railway":              IsRailway(),
+		"postgres":           postgresConnected,
+		"databaseSource":     dbSource,
+		"databaseUrl":        envPresence("DATABASE_URL"),
+		"databasePrivateUrl": envPresence("DATABASE_PRIVATE_URL"),
+		"pgHost":             envPresence("PGHOST"),
+		"jwtSecret":          ternary(jwt != "", "set", "empty"),
+		"openaiApiKey":       envPresence("OPENAI_API_KEY"),
+		"railway":            IsRailway(),
+	}
+	if w := jwtSecretWarning(jwt); w != "" {
+		out["jwtSecretWarning"] = w
 	}
 	if !postgresConnected && IsRailway() {
-		out["hint"] = "Railway app service → Variables → DATABASE_URL = Postgres Reference, JWT_SECRET = random string → Redeploy"
+		out["hint"] = "dental_video service → Variables → + New Variable → Reference → Postgres → DATABASE_URL. JWT_SECRET = random string (not API key). Redeploy."
 	}
 	return out
+}
+
+func jwtSecretWarning(jwt string) string {
+	if jwt == "" {
+		return "JWT_SECRET is empty"
+	}
+	if strings.HasPrefix(jwt, "sk-ant") || strings.HasPrefix(jwt, "sk-proj") || strings.HasPrefix(jwt, "sk-") {
+		return "JWT_SECRET looks like an API key. Use a random string here; put OpenAI/Anthropic keys in OPENAI_API_KEY."
+	}
+	if jwt == "dev-only-change-in-production" {
+		return "JWT_SECRET is still the dev default. Set a long random string on Railway."
+	}
+	return ""
 }
 
 func ternary(cond bool, a, b string) string {
@@ -151,7 +171,47 @@ func resolveDatabaseURL() (string, string) {
 		}
 		return normalizeDatabaseURL(raw), key
 	}
+	if built, source, ok := databaseURLFromComponents(); ok {
+		return normalizeDatabaseURL(built), source
+	}
 	return "", ""
+}
+
+func firstEnv(keys ...string) string {
+	for _, key := range keys {
+		if v := strings.TrimSpace(os.Getenv(key)); v != "" && !strings.Contains(v, "${{") {
+			return v
+		}
+	}
+	return ""
+}
+
+func databaseURLFromComponents() (string, string, bool) {
+	host := firstEnv("PGHOST", "POSTGRES_HOST")
+	user := firstEnv("PGUSER", "POSTGRES_USER")
+	password := firstEnv("PGPASSWORD", "POSTGRES_PASSWORD")
+	dbName := firstEnv("PGDATABASE", "POSTGRES_DB", "POSTGRES_DATABASE")
+	port := firstEnv("PGPORT", "POSTGRES_PORT")
+	if port == "" {
+		port = "5432"
+	}
+	if host == "" || user == "" {
+		return "", "", false
+	}
+	if dbName == "" {
+		dbName = "railway"
+	}
+	u := &url.URL{
+		Scheme: "postgresql",
+		Host:   fmt.Sprintf("%s:%s", host, port),
+		Path:   "/" + dbName,
+	}
+	if password != "" {
+		u.User = url.UserPassword(user, password)
+	} else {
+		u.User = url.User(user)
+	}
+	return u.String(), "PGHOST", true
 }
 
 // normalizeDatabaseURL appends sslmode=require on Railway when the URL omits it.
