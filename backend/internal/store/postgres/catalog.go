@@ -35,19 +35,31 @@ func (db *DB) PaginateVideos(ctx context.Context, orgID, category, skillLevel, s
 		pageSize = 12
 	}
 	args := []any{orgID}
-	where := `WHERE org_id=$1`
+	filters := []string{`org_id=$1`}
+	joinFilters := []string{`v.org_id=$1`}
 	if category != "" {
 		args = append(args, category)
-		where += fmt.Sprintf(` AND category=$%d`, len(args))
+		n := len(args)
+		filters = append(filters, fmt.Sprintf(`category=$%d`, n))
+		joinFilters = append(joinFilters, fmt.Sprintf(`v.category=$%d`, n))
 	}
 	if skillLevel != "" {
 		args = append(args, skillLevel)
-		where += fmt.Sprintf(` AND skill_level=$%d`, len(args))
+		n := len(args)
+		filters = append(filters, fmt.Sprintf(`skill_level=$%d`, n))
+		joinFilters = append(joinFilters, fmt.Sprintf(`v.skill_level=$%d`, n))
 	}
 	if search = strings.TrimSpace(search); search != "" {
 		args = append(args, "%"+strings.ToLower(search)+"%")
-		where += fmt.Sprintf(` AND (LOWER(title) LIKE $%d OR LOWER(description) LIKE $%d)`, len(args), len(args))
+		n := len(args)
+		pattern := fmt.Sprintf(`$%d`, n)
+		like := fmt.Sprintf(`(LOWER(title) LIKE %s OR LOWER(description) LIKE %s)`, pattern, pattern)
+		joinLike := fmt.Sprintf(`(LOWER(v.title) LIKE %s OR LOWER(v.description) LIKE %s)`, pattern, pattern)
+		filters = append(filters, like)
+		joinFilters = append(joinFilters, joinLike)
 	}
+	where := `WHERE ` + strings.Join(filters, ` AND `)
+	whereJoin := `WHERE ` + strings.Join(joinFilters, ` AND `)
 	var total int
 	if err := db.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM videos `+where, args...).Scan(&total); err != nil {
 		return models.VideoPage{}, err
@@ -60,7 +72,7 @@ func (db *DB) PaginateVideos(ctx context.Context, orgID, category, skillLevel, s
 	args = append(args, pageSize, offset)
 	q := `SELECT v.id, v.title, v.description, v.category, v.procedure, v.skill_level, v.duration_sec,
 		v.thumbnail_url, v.video_url, v.instructor_id, COALESCE(i.name,''), v.tags, v.view_count, v.featured, v.published_at
-		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id ` + where +
+		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id AND i.org_id=v.org_id ` + whereJoin +
 		fmt.Sprintf(` ORDER BY v.published_at DESC LIMIT $%d OFFSET $%d`, len(args)-1, len(args))
 	rows, err := db.Pool.Query(ctx, q, args...)
 	if err != nil {
@@ -98,7 +110,7 @@ func (db *DB) GetVideo(ctx context.Context, orgID, id string) (models.Video, boo
 	row := db.Pool.QueryRow(ctx, `
 		SELECT v.id, v.title, v.description, v.category, v.procedure, v.skill_level, v.duration_sec,
 			v.thumbnail_url, v.video_url, v.instructor_id, COALESCE(i.name,''), v.tags, v.view_count, v.featured, v.published_at
-		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id
+		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id AND i.org_id=v.org_id
 		WHERE v.org_id=$1 AND v.id=$2`, orgID, id)
 	var v models.Video
 	var instName string
@@ -118,7 +130,7 @@ func (db *DB) FeaturedVideos(ctx context.Context, orgID string) ([]models.Video,
 	rows, err := db.Pool.Query(ctx, `
 		SELECT v.id, v.title, v.description, v.category, v.procedure, v.skill_level, v.duration_sec,
 			v.thumbnail_url, v.video_url, v.instructor_id, COALESCE(i.name,''), v.tags, v.view_count, v.featured, v.published_at
-		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id
+		FROM videos v LEFT JOIN instructors i ON i.id=v.instructor_id AND i.org_id=v.org_id
 		WHERE v.org_id=$1 AND v.featured=true ORDER BY v.view_count DESC LIMIT 12`, orgID)
 	if err != nil {
 		return nil, err

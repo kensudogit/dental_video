@@ -43,6 +43,16 @@ export function isNetworkGraphQLError(error: GraphQLErrorLike | undefined): bool
   return messageLooksNetworkFailure(error.message)
 }
 
+function messageLooksSqlError(message: string): boolean {
+  const m = message.toLowerCase()
+  return (
+    m.includes('sqlstate') ||
+    m.includes('column reference') ||
+    m.includes('syntax error at') ||
+    m.includes('pq:')
+  )
+}
+
 export function graphQLErrorHint(message: string | null | undefined): string {
   const text = message ?? ''
   if (messageLooksAuthRequired(text)) {
@@ -51,5 +61,8 @@ export function graphQLErrorHint(message: string | null | undefined): string {
   if (messageLooksNetworkFailure(text)) {
     return graphQLConnectionHint()
   }
-  return graphQLConnectionHint()
+  if (messageLooksSqlError(text)) {
+    return 'データベースエラーです。しばらくしてから再読み込みしてください。'
+  }
+  return 'API エラーが発生しました。/status で接続状態を確認してください。'
 }
