@@ -4,6 +4,7 @@ import { SkillBadge } from '@/components/SkillBadge'
 import { PathsPageDocument, type PathsPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'
 import { graphQLErrorHint } from '@/lib/graphql-errors'
+import { displayText } from '@/lib/display-text'
 import { ui } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
@@ -40,10 +41,10 @@ export default async function PathsPage() {
               <CategoryBadge category={p.category} />
               <SkillBadge level={p.skillLevel} />
             </div>
-            <h4>{p.title}</h4>
-            <p>{p.description}</p>
+            <h4>{displayText(p.title)}</h4>
+            <p>{displayText(p.description)}</p>
             <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
-              {ui.pathVideos(p.videoIds.length, p.estimatedMinutes)} &middot; {p.certificateTitle}
+              {ui.pathVideos(p.videoIds.length, p.estimatedMinutes)} &middot; {displayText(p.certificateTitle)}
             </p>
           </Link>
         ))}

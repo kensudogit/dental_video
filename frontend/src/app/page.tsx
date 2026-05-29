@@ -7,6 +7,7 @@ import { SkillBadge } from '@/components/SkillBadge'
 import { DashboardPageDocument, type DashboardPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'
 import { graphQLErrorHint } from '@/lib/graphql-errors'
+import { displayText } from '@/lib/display-text'
 import { ui } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
@@ -85,7 +86,7 @@ export default async function HomePage() {
                 <CategoryBadge category={p.category} />
                 <SkillBadge level={p.skillLevel} />
               </div>
-              <h4>{p.title}</h4>
+              <h4>{displayText(p.title)}</h4>
               <p>{ui.pathMeta(p.estimatedMinutes, p.enrolledCount)}</p>
             </Link>
           ))}

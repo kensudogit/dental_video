@@ -26,49 +26,43 @@ func ensureDemoCredentials(ctx context.Context, db *DB) error {
 		if err := insertDemoOrg(ctx, db, hash); err != nil {
 			return err
 		}
-		return nil
-	}
-
-	var userID string
-	err = db.Pool.QueryRow(ctx, `SELECT id FROM users WHERE LOWER(email)=$1`, demoEmail).Scan(&userID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return insertDemoUser(ctx, db, hash)
-	}
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Pool.Exec(ctx, `UPDATE users SET password_hash=$1 WHERE id=$2`, hash, userID)
-	if err != nil {
-		return err
+	} else {
+		var userID string
+		err = db.Pool.QueryRow(ctx, `SELECT id FROM users WHERE LOWER(email)=$1`, demoEmail).Scan(&userID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			if err := insertDemoUser(ctx, db, hash); err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		} else {
+			_, err = db.Pool.Exec(ctx, `UPDATE users SET password_hash=$1 WHERE id=$2`, hash, userID)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return repairDemoTextEncoding(ctx, db)
 }
 
 func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 	_, err := db.Pool.Exec(ctx, `
-		UPDATE learning_paths SET
-			title = $2,
-			description = $3,
-			certificate_title = $4
-		WHERE id = $1 AND org_id = 'org_demo'
-		  AND (title LIKE E'\\u%' OR description LIKE E'\\u%' OR certificate_title LIKE E'\\u%')`,
+		UPDATE learning_paths SET title=$2, description=$3, certificate_title=$4
+		WHERE id=$1 AND org_id='org_demo'`,
 		"path-1", "根管基礎", "初級コース", "根管修了")
 	if err != nil {
 		return err
 	}
 	_, err = db.Pool.Exec(ctx, `
-		UPDATE live_sessions SET title = $2, description = $3
-		WHERE id = $1 AND org_id = 'org_demo'
-		  AND (title LIKE E'\\u%' OR description LIKE E'\\u%')`,
+		UPDATE live_sessions SET title=$2, description=$3
+		WHERE id=$1 AND org_id='org_demo'`,
 		"live-1", "歯内療法ライブ", "開窩デモ")
 	if err != nil {
 		return err
 	}
 	_, err = db.Pool.Exec(ctx, `
-		UPDATE case_discussions SET title = $2, summary = $3
-		WHERE id = $1 AND org_id = 'org_demo'
-		  AND (title LIKE E'\\u%' OR summary LIKE E'\\u%')`,
+		UPDATE case_discussions SET title=$2, summary=$3
+		WHERE id=$1 AND org_id='org_demo'`,
 		"case-1", "難抜歯症例", "分割抜歯の判断")
 	return err
 }

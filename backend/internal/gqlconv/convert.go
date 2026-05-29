@@ -5,7 +5,12 @@ import (
 
 	"github.com/pluszero/dental-video-api/internal/graph/generated"
 	"github.com/pluszero/dental-video-api/internal/models"
+	"github.com/pluszero/dental-video-api/internal/textutil"
 )
+
+func txt(s string) string {
+	return textutil.DecodeJSONUnicodeEscapes(s)
+}
 
 func fmtTime(t time.Time) string {
 	if t.IsZero() {
@@ -28,20 +33,20 @@ func ToDashboard(d models.DashboardStats) *generated.DashboardStats {
 
 func ToInstructor(i models.Instructor) *generated.Instructor {
 	return &generated.Instructor{
-		ID: i.ID, Name: i.Name, Title: i.Title, Specialty: i.Specialty,
-		Bio: i.Bio, AvatarURL: i.AvatarURL, VideoCount: i.VideoCount,
+		ID: i.ID, Name: txt(i.Name), Title: txt(i.Title), Specialty: txt(i.Specialty),
+		Bio: txt(i.Bio), AvatarURL: i.AvatarURL, VideoCount: i.VideoCount,
 	}
 }
 
 func ToVideo(v models.Video) *generated.Video {
 	var name *string
 	if v.InstructorName != "" {
-		n := v.InstructorName
+		n := txt(v.InstructorName)
 		name = &n
 	}
 	return &generated.Video{
-		ID: v.ID, Title: v.Title, Description: v.Description,
-		Category: models.VideoCategory(v.Category), Procedure: v.Procedure,
+		ID: v.ID, Title: txt(v.Title), Description: txt(v.Description),
+		Category: models.VideoCategory(v.Category), Procedure: txt(v.Procedure),
 		SkillLevel: models.SkillLevel(v.SkillLevel), DurationSec: v.DurationSec,
 		ThumbnailURL: v.ThumbnailURL, VideoURL: v.VideoURL,
 		InstructorID: v.InstructorID, InstructorName: name,
@@ -70,10 +75,10 @@ func ToVideoPage(p models.VideoPage) *generated.VideoPage {
 
 func ToPath(p models.LearningPath) *generated.LearningPath {
 	return &generated.LearningPath{
-		ID: p.ID, Title: p.Title, Description: p.Description,
+		ID: p.ID, Title: txt(p.Title), Description: txt(p.Description),
 		Category: models.VideoCategory(p.Category), SkillLevel: models.SkillLevel(p.SkillLevel),
 		VideoIds: p.VideoIDs, EstimatedMinutes: p.EstimatedMinutes,
-		EnrolledCount: p.EnrolledCount, CertificateTitle: p.CertificateTitle,
+		EnrolledCount: p.EnrolledCount, CertificateTitle: txt(p.CertificateTitle),
 	}
 }
 

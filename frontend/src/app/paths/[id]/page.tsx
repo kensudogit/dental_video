@@ -7,6 +7,7 @@ import { PathDetailPageDocument, type PathDetailPageQuery } from '@/lib/generate
 import { gqlRequest } from '@/lib/gql'
 import { formatDuration } from '@/lib/labels'
 import { graphQLErrorHint } from '@/lib/graphql-errors'
+import { displayText } from '@/lib/display-text'
 import { ui } from '@/lib/ui'
 
 export const dynamic = 'force-dynamic'
@@ -40,8 +41,8 @@ export default async function PathDetailPage({ params }: { params: Promise<{ id:
       <div className="page-head">
         <CategoryBadge category={path.category} />
         <SkillBadge level={path.skillLevel} />
-        <h1 style={{ marginTop: '0.5rem' }}>{path.title}</h1>
-        <p>{path.description}</p>
+        <h1 style={{ marginTop: '0.5rem' }}>{displayText(path.title)}</h1>
+        <p>{displayText(path.description)}</p>
       </div>
 
       <section className="panel">

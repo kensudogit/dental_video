@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { SkillLevel, VideoCategory } from '@/lib/generated/graphql'
 import { formatDuration } from '@/lib/labels'
+import { displayText } from '@/lib/display-text'
 import { CategoryBadge } from './CategoryBadge'
 import { SkillBadge } from './SkillBadge'
 
@@ -35,8 +36,8 @@ export function VideoCard({ video }: { video: VideoCardData }) {
           <CategoryBadge category={video.category} />
           <SkillBadge level={video.skillLevel} />
         </div>
-        <h3>{video.title}</h3>
-        {video.description ? <p className="video-desc">{video.description}</p> : null}
+        <h3>{displayText(video.title)}</h3>
+        {video.description ? <p className="video-desc">{displayText(video.description)}</p> : null}
         <div className="video-meta">
           {video.instructorName ? <span>{video.instructorName}</span> : null}
           {video.viewCount != null ? <span>{video.viewCount.toLocaleString()} ???</span> : null}
