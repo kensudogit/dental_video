@@ -91,8 +91,8 @@ func CatalogVideos() []CatalogVideo {
 	}
 }
 
-// CategoryPaths maps learning path IDs to category demo videos.
-func CategoryPaths() []struct {
+// LearningPaths returns demo learning paths upserted on startup.
+func LearningPaths() []struct {
 	ID, Title, Description, Category, SkillLevel, Certificate string
 	VideoIDs                                                   []string
 	EstimatedMinutes, EnrolledCount                            int
@@ -102,6 +102,16 @@ func CategoryPaths() []struct {
 		VideoIDs                                                   []string
 		EstimatedMinutes, EnrolledCount                            int
 	}{
+		{
+			ID: "path-1", Title: "\u6839\u7ba1\u6cbb\u7642 \u57fa\u790e\u30b3\u30fc\u30b9", Description: "\u958b\u7a9e\u304b\u3089\u9577\u6e2c\u5b9a\u307e\u3067\u3001\u521d\u3081\u3066\u6839\u7ba1\u6cbb\u7642\u306b\u53d6\u308a\u7d44\u3080\u65b9\u306e\u305f\u3081\u306e\u30ab\u30ea\u30ad\u30e5\u30e9\u30e0\u3002",
+			Category: "ENDODONTICS", SkillLevel: "BEGINNER", VideoIDs: []string{"v-1", "v-2"},
+			EstimatedMinutes: 25, EnrolledCount: 128, Certificate: "\u6839\u7ba1\u6cbb\u7642 \u57fa\u790e\u4fee\u4e86",
+		},
+		{
+			ID: "path-2", Title: "\u6b6f\u5468\u6cbb\u7642\u30b9\u30bf\u30fc\u30bf\u30fc", Description: "SRP\u3068\u60a3\u8005\u6307\u5c0e\u306e\u5b9f\u8df5\u30b9\u30ad\u30eb\u3092\u6bb5\u968e\u7684\u306b\u7fd2\u5f97\u3002",
+			Category: "PERIODONTICS", SkillLevel: "BEGINNER", VideoIDs: []string{"v-3", "v-6"},
+			EstimatedMinutes: 18, EnrolledCount: 256, Certificate: "\u6b6f\u5468\u6cbb\u7642\u30b9\u30bf\u30fc\u30bf\u30fc\u4fee\u4e86",
+		},
 		{
 			ID: "path-3", Title: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u5916\u79d1 \u5165\u9580", Description: "\u57cb\u5165\u306e\u57fa\u790e\u304b\u3089\u5916\u79d1\u7684\u30a2\u30d7\u30ed\u30fc\u30c1\u307e\u3067\u3002",
 			Category: "IMPLANT", SkillLevel: "ADVANCED", VideoIDs: []string{"v-4", "v-5"},
@@ -123,4 +133,13 @@ func CategoryPaths() []struct {
 			EstimatedMinutes: 10, EnrolledCount: 56, Certificate: "\u753b\u50cf\u8a3a\u65ad \u5165\u9580\u4fee\u4e86",
 		},
 	}
+}
+
+// CategoryPaths is an alias kept for callers that only need category demo paths.
+func CategoryPaths() []struct {
+	ID, Title, Description, Category, SkillLevel, Certificate string
+	VideoIDs                                                   []string
+	EstimatedMinutes, EnrolledCount                            int
+} {
+	return LearningPaths()
 }

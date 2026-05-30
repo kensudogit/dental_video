@@ -6,7 +6,6 @@ import { ui } from '@/lib/ui'
 import './globals.css'
 
 const noto = Noto_Sans_JP({
-  subsets: ['latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
 })

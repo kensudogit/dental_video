@@ -48,13 +48,6 @@ func ensureDemoCredentials(ctx context.Context, db *DB) error {
 
 func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 	_, err := db.Pool.Exec(ctx, `
-		UPDATE learning_paths SET title=$2, description=$3, certificate_title=$4
-		WHERE id=$1 AND org_id='org_demo'`,
-		"path-1", "\u6839\u7ba1\u57fa\u790e", "\u521d\u7d1a\u30b3\u30fc\u30b9", "\u6839\u7ba1\u4fee\u4e86")
-	if err != nil {
-		return err
-	}
-	_, err = db.Pool.Exec(ctx, `
 		UPDATE live_sessions SET title=$2, description=$3
 		WHERE id=$1 AND org_id='org_demo'`,
 		"live-1", "\u6b6f\u5185\u7642\u6cd5\u30e9\u30a4\u30d6", "\u958b\u7a9e\u30c7\u30e2")
@@ -95,7 +88,7 @@ func repairDemoCatalog(ctx context.Context, db *DB) error {
 		}
 	}
 
-	for _, p := range demo.CategoryPaths() {
+	for _, p := range demo.LearningPaths() {
 		if _, err := db.Pool.Exec(ctx, `
 			INSERT INTO learning_paths (id, org_id, title, description, category, skill_level, estimated_minutes, enrolled_count, certificate_title)
 			VALUES ($1, 'org_demo', $2, $3, $4, $5, $6, $7, $8)
