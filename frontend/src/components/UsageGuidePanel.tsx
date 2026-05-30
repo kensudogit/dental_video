@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const STORAGE_KEY = 'dental-video-usage-guide-v5'
+const STORAGE_KEY = 'dental-video-usage-guide-v6'
 const PANEL_WIDTH = 380
 
 type GuideStep = {
@@ -41,15 +41,30 @@ const L = {
     },
     {
       title: '3. デモログイン',
-      body: 'PostgreSQL 接続時はクリニック単位でデータが分離されます。',
+      body: 'PostgreSQL 接続時はクリニック（テナント）単位でデータが分離されます。',
       items: [
         '/login → demo@sakura-dental.jp / demo1234',
-        '/settings → 組織名・席数・チーム・利用量',
-        'ログイン後は JWT クッキー (dv_token) で GraphQL がテナント別',
+        'ログイン後 JWT クッキー (dv_token) が発行され GraphQL がテナント別に',
+        '組織管理の詳細 → 手順 4「Organization settings (SaaS)」',
       ],
     },
     {
-      title: '4. Docker ローカル（推奨）',
+      title: '4. Organization settings (SaaS)',
+      body: '/settings でクリニック（テナント）の管理画面。PostgreSQL + ログインが必要です。',
+      items: [
+        '左メニュー「組織設定」または /settings を開く',
+        '未ログイン → ログイン案内のみ（デモ: demo@sakura-dental.jp / demo1234）',
+        'メモリモード（DATABASE_URL 未設定）では利用不可',
+        '【編集可】クリニック名・slug（URL 識別子）・席数・タイムゾーン → Save',
+        '【参照のみ】プラン（FREE/PRO 等）・契約状態（ACTIVE 等）・メンバー数',
+        '【利用量】Members / Videos / API（今月）の使用数と上限',
+        '【Team】所属メンバー一覧（名前・メール・OWNER / ADMIN / MEMBER / VIEWER）',
+        'テナント分離: org_id ごとに動画・進捗・設定を分離（他院のデータは見えない）',
+        '未ログイン閲覧はデモ org（org_demo）のカタログのみ表示',
+      ],
+    },
+    {
+      title: '5. Docker ローカル（推奨）',
       body: 'PostgreSQL + MinIO + API + Web を一括起動。SaaS・AI Board の確認に最適。',
       items: [
         'cp .env.example .env → OPENAI_API_KEY を設定（AI Board 用）',
@@ -59,7 +74,7 @@ const L = {
       ],
     },
     {
-      title: '5. npm ローカル開発',
+      title: '6. npm ローカル開発',
       body: 'DATABASE_URL 未設定時はメモリストア。設定すれば PostgreSQL に切り替わります。',
       items: [
         'npm run install:all → cd backend; go mod tidy',
@@ -68,7 +83,7 @@ const L = {
       ],
     },
     {
-      title: '6. 学習コンテンツ',
+      title: '7. 学習コンテンツ',
       body: '動画・学習パス・テスト・マイ学習で段階的に習得します。',
       items: [
         '動画ライブラリ → 分野・難易度・キーワードで検索',
@@ -78,7 +93,7 @@ const L = {
       ],
     },
     {
-      title: '7. AI Board',
+      title: '8. AI Board',
       body: '学習 KPI を集約し、OpenAI で経営インサイトを生成します。',
       items: [
         '/board → 期間を選んで KPI 確認',
@@ -87,7 +102,7 @@ const L = {
       ],
     },
     {
-      title: '8. 開発者向け',
+      title: '9. 開発者向け',
       body: 'gqlgen + Codegen + Apollo + urql（Subscription）構成。',
       items: [
         'GraphiQL: http://localhost:8080/graphiql',
