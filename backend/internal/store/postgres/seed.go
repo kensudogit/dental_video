@@ -50,21 +50,21 @@ func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 	_, err := db.Pool.Exec(ctx, `
 		UPDATE learning_paths SET title=$2, description=$3, certificate_title=$4
 		WHERE id=$1 AND org_id='org_demo'`,
-		"path-1", "根管基礎", "初級コース", "根管修了")
+		"path-1", "\u6839\u7ba1\u57fa\u790e", "\u521d\u7d1a\u30b3\u30fc\u30b9", "\u6839\u7ba1\u4fee\u4e86")
 	if err != nil {
 		return err
 	}
 	_, err = db.Pool.Exec(ctx, `
 		UPDATE live_sessions SET title=$2, description=$3
 		WHERE id=$1 AND org_id='org_demo'`,
-		"live-1", "歯内療法ライブ", "開窩デモ")
+		"live-1", "\u6b6f\u5185\u7642\u6cd5\u30e9\u30a4\u30d6", "\u958b\u7a9e\u30c7\u30e2")
 	if err != nil {
 		return err
 	}
 	_, err = db.Pool.Exec(ctx, `
 		UPDATE case_discussions SET title=$2, summary=$3
 		WHERE id=$1 AND org_id='org_demo'`,
-		"case-1", "難抜歯症例", "分割抜歯の判断")
+		"case-1", "\u96e3\u629c\u6b6f\u75c7\u4f8b", "\u5206\u5272\u629c\u6b6f\u306e\u5224\u65ad")
 	if err != nil {
 		return err
 	}
@@ -276,7 +276,7 @@ func seedDemo(ctx context.Context, db *DB) error {
 	_, err = tx.Exec(ctx, `
 		INSERT INTO learning_paths (id, org_id, title, description, category, skill_level, estimated_minutes, certificate_title)
 		VALUES ($1, $2, $3, $4, 'ENDODONTICS', 'BEGINNER', 25, $5)`,
-		"path-1", orgID, "根管基礎", "初級コース", "根管修了")
+		"path-1", orgID, "\u6839\u7ba1\u57fa\u790e", "\u521d\u7d1a\u30b3\u30fc\u30b9", "\u6839\u7ba1\u4fee\u4e86")
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func seedDemo(ctx context.Context, db *DB) error {
 	_, err = tx.Exec(ctx, `
 		INSERT INTO live_sessions (id, org_id, host_user_id, title, description, scheduled_at, status, stream_url)
 		VALUES ($1, $2, $3, $4, $5, $6, 'SCHEDULED', '')`,
-		"live-1", orgID, userID, "歯内療法ライブ", "開窩デモ", now.Add(48*time.Hour))
+		"live-1", orgID, userID, "\u6b6f\u5185\u7642\u6cd5\u30e9\u30a4\u30d6", "\u958b\u7a9e\u30c7\u30e2", now.Add(48*time.Hour))
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func seedDemo(ctx context.Context, db *DB) error {
 	_, err = tx.Exec(ctx, `
 		INSERT INTO case_discussions (id, org_id, author_user_id, title, summary, status)
 		VALUES ($1, $2, $3, $4, $5, 'OPEN')`,
-		"case-1", orgID, userID, "難抜歯症例", "分割抜歯の判断")
+		"case-1", orgID, userID, "\u96e3\u629c\u6b6f\u75c7\u4f8b", "\u5206\u5272\u629c\u6b6f\u306e\u5224\u65ad")
 	if err != nil {
 		return err
 	}

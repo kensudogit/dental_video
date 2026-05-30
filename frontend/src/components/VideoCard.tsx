@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { SkillLevel, VideoCategory } from '@/lib/generated/graphql'
 import { formatDuration } from '@/lib/labels'
 import { displayText } from '@/lib/display-text'
+import { ui } from '@/lib/ui'
 import { CategoryBadge } from './CategoryBadge'
 import { SkillBadge } from './SkillBadge'
 
@@ -40,7 +41,11 @@ export function VideoCard({ video }: { video: VideoCardData }) {
         {video.description ? <p className="video-desc">{displayText(video.description)}</p> : null}
         <div className="video-meta">
           {video.instructorName ? <span>{video.instructorName}</span> : null}
-          {video.viewCount != null ? <span>{video.viewCount.toLocaleString()} ???</span> : null}
+          {video.viewCount != null ? (
+            <span>
+              {video.viewCount.toLocaleString()} {ui.viewCount}
+            </span>
+          ) : null}
         </div>
       </div>
     </Link>

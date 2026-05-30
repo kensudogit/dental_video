@@ -39,6 +39,7 @@ export const ui = {
   statQuizzes: '\u7406\u89e3\u5ea6\u30c6\u30b9\u30c8',
   statWatch: '\u4eca\u6708\u306e\u8996\u8074',
   featured: '\u304a\u3059\u3059\u3081\u52d5\u753b',
+  viewCount: '\u8996\u8074',
   allVideos: '\u3059\u3079\u3066\u306e\u52d5\u753b\u3092\u898b\u308b',
   pathsSection: '\u5b66\u7fd2\u30d1\u30b9\uff08\u30ab\u30ea\u30ad\u30e5\u30e9\u30e0\uff09',
   pathMeta: (min: number, n: number) => `\u7d04 ${min} \u5206 \u00b7 ${n} \u540d\u304c\u53d7\u8b16\u4e2d`,
