@@ -38,18 +38,18 @@ func (s *Store) seed() {
 			Tags: []string{"SRP", "\u6b6f\u5468"}, ViewCount: 2100, PublishedAt: now.AddDate(0, -3, 0), Featured: true,
 		},
 		{
-			ID: "v-4", Title: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u57cb\u5165 - \u30d5\u30e9\u30c3\u30d7\u30c7\u30b6\u30a4\u30f3", Description: "\u6700\u5c0f\u4fb5\u8972\u3092\u610f\u8b58\u3057\u305f\u5207\u958b\u30fb\u5265\u96e2\u306e\u30c7\u30e2\u3002",
+			ID: "v-4", Title: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u57cb\u5165 - \u30d5\u30e9\u30c3\u30d7\u30c7\u30b6\u30a4\u30f3\u3068\u6cbb\u7642\u306e\u6d41\u308c", Description: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u6cbb\u7642\u306e\u5168\u4f53\u50cf\u3068\u57cb\u5165\u90e8\u4f4d\u306e\u6e96\u5099\u624b\u9806\u3092\u89e3\u8aac\u3057\u307e\u3059\u3002",
 			Category: "IMPLANT", Procedure: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8", SkillLevel: "ADVANCED", DurationSec: 900,
-			ThumbnailURL: "https://placehold.co/640x360/7c3aed/fff?text=Implant+Flap",
+			ThumbnailURL: "https://img.youtube.com/vi/g-i3P-D6p7M/hqdefault.jpg",
 			VideoURL: demo.VideoURL("v-4"), InstructorID: "inst-3",
-			Tags: []string{"\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8", "\u5916\u79d1"}, ViewCount: 560, PublishedAt: now.AddDate(0, -1, 0), Featured: false,
+			Tags: []string{"\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8", "\u5916\u79d1"}, ViewCount: 560, PublishedAt: now.AddDate(0, -1, 0), Featured: true,
 		},
 		{
-			ID: "v-5", Title: "\u30af\u30e9\u30a6\u30f3\u30d7\u30ec\u30c3\u30d7 - \u30de\u30fc\u30b8\u30f3\u8a2d\u8a08", Description: "\u5be9\u7f8e\u3068\u6a5f\u80fd\u3092\u4e21\u7acb\u3059\u308b\u30d7\u30ec\u30c3\u30d7\u5f62\u614b\u3002",
-			Category: "PROSTHODONTICS", Procedure: "\u30af\u30e9\u30a6\u30f3", SkillLevel: "INTERMEDIATE", DurationSec: 660,
-			ThumbnailURL: "https://placehold.co/640x360/c2410c/fff?text=Crown+Prep",
-			VideoURL: demo.VideoURL("v-5"), InstructorID: "inst-1",
-			Tags: []string{"\u88dc\u7db6", "\u30d7\u30ec\u30c3\u30d7"}, ViewCount: 780, PublishedAt: now.AddDate(0, -2, -5), Featured: false,
+			ID: "v-5", Title: "\u5358\u72ec\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8 - \u6cbb\u7642\u8a08\u753b\u3068\u57cb\u5165\u306e\u8981\u70b9", Description: "\u5358\u72ec\u6b6f\u6b20\u640d\u3078\u306e\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u6cbb\u7642\u306e\u6d41\u308c\u3068\u5be9\u7f8e\u30fb\u6a5f\u80fd\u306e\u8003\u3048\u65b9\u3002",
+			Category: "IMPLANT", Procedure: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8", SkillLevel: "INTERMEDIATE", DurationSec: 660,
+			ThumbnailURL: "https://img.youtube.com/vi/8gVfdyASewA/hqdefault.jpg",
+			VideoURL: demo.VideoURL("v-5"), InstructorID: "inst-3",
+			Tags: []string{"\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8", "\u6cbb\u7642\u8a08\u753b"}, ViewCount: 780, PublishedAt: now.AddDate(0, -2, -5), Featured: false,
 		},
 		{
 			ID: "v-6", Title: "\u611f\u67d3\u5bfe\u7b56 - \u6ec1\u83cc\u30b5\u30a4\u30af\u30eb\u3068\u30c8\u30ec\u30fc\u30b5\u30d3\u30ea\u30c6\u30a3", Description: "\u30af\u30e9\u30b9B\u30aa\u30fc\u30c8\u30af\u30ec\u30fc\u30d6\u904b\u7528\u306e\u6a19\u6e96\u624b\u9806\u3002",
@@ -59,11 +59,11 @@ func (s *Store) seed() {
 			Tags: []string{"\u611f\u67d3\u5bfe\u7b56", "\u6ec1\u83cc"}, ViewCount: 3200, PublishedAt: now.AddDate(0, -4, 0), Featured: true,
 		},
 		{
-			ID: "v-7", Title: "\u5c0f\u5150\u884c\u52d5\u7ba1\u7406 - \u58f0\u304b\u3051\u3068\u30dd\u30b8\u30b7\u30e7\u30cb\u30f3\u30b0", Description: "\u4f4e\u4fb5\u8972\u3067\u8a3a\u7642\u3092\u9032\u3081\u308b\u30b3\u30df\u30e5\u30cb\u30b1\u30fc\u30b7\u30e7\u30f3\u6280\u6cd5\u3002",
+			ID: "v-7", Title: "\u5c0f\u5150\u6b6f\u79d1 - \u521d\u8a3a\u306e\u6d41\u308c\u3068\u884c\u52d5\u7ba1\u7406\u306e\u57fa\u672c", Description: "\u4f4e\u4fb5\u8972\u3067\u8a3a\u7642\u3092\u9032\u3081\u308b\u305f\u3081\u306e\u58f0\u304b\u3051\u30fb\u30dd\u30b8\u30b7\u30e7\u30cb\u30f3\u30b0\u30fb\u4fdd\u8b77\u8005\u8aac\u660e\u306e\u8981\u70b9\u3002",
 			Category: "PEDIATRIC", Procedure: "\u884c\u52d5\u7ba1\u7406", SkillLevel: "BEGINNER", DurationSec: 420,
-			ThumbnailURL: "https://placehold.co/640x360/db2777/fff?text=Pediatric",
+			ThumbnailURL: "https://img.youtube.com/vi/GGJRR5RsalU/hqdefault.jpg",
 			VideoURL: demo.VideoURL("v-7"), InstructorID: "inst-2",
-			Tags: []string{"\u5c0f\u5150", "\u30b3\u30df\u30e5\u30cb\u30b1\u30fc\u30b7\u30e7\u30f3"}, ViewCount: 1450, PublishedAt: now.AddDate(0, -1, -20), Featured: false,
+			Tags: []string{"\u5c0f\u5150", "\u521d\u8a3a", "\u884c\u52d5\u7ba1\u7406"}, ViewCount: 1450, PublishedAt: now.AddDate(0, -1, -20), Featured: true,
 		},
 		{
 			ID: "v-8", Title: "\u629c\u6b6f - \u96e3\u629c\u6b6f\u306e\u5206\u5272\u3068\u30a8\u30ec\u30d9\u30fc\u30b7\u30e7\u30f3", Description: "\u30eb\u30fc\u30c8\u7834\u6298\u30ea\u30b9\u30af\u3092\u4e0b\u3052\u308b\u5206\u5272\u629c\u6b6f\u306e\u624b\u9806\u3002",
@@ -71,6 +71,20 @@ func (s *Store) seed() {
 			ThumbnailURL: "https://placehold.co/640x360/b91c1c/fff?text=Extraction",
 			VideoURL: demo.VideoURL("v-8"), InstructorID: "inst-3",
 			Tags: []string{"\u5916\u79d1", "\u629c\u6b6f"}, ViewCount: 990, PublishedAt: now.AddDate(0, 0, -15), Featured: false,
+		},
+		{
+			ID: "v-9", Title: "\u77ef\u6b63\u6cbb\u7642\u306e\u57fa\u790e - \u30d6\u30e9\u30b1\u30c3\u30c8\u306e\u4ed5\u7d44\u307f\u3068\u6cbb\u7642\u306e\u6d41\u308c", Description: "\u77ef\u6b63\u88c5\u7f6e\u306e\u50cd\u304d\u3068\u6cbb\u7642\u7d4c\u904e\u306e\u8aac\u660e\u30dd\u30a4\u30f3\u30c8\u3092\u5b66\u3073\u307e\u3059\u3002",
+			Category: "ORTHODONTICS", Procedure: "\u77ef\u6b63", SkillLevel: "BEGINNER", DurationSec: 540,
+			ThumbnailURL: "https://img.youtube.com/vi/eTSZGIic8cE/hqdefault.jpg",
+			VideoURL: demo.VideoURL("v-9"), InstructorID: "inst-1",
+			Tags: []string{"\u77ef\u6b63", "\u30d6\u30e9\u30b1\u30c3\u30c8"}, ViewCount: 820, PublishedAt: now.AddDate(0, 0, -10), Featured: true,
+		},
+		{
+			ID: "v-10", Title: "\u53e3\u8154\u653e\u5c04\u7dda\u753b\u50cf - \u8aad\u5f71\u306e\u57fa\u672c", Description: "\u30d1\u30ce\u30e9\u30de\u30fb\u30c7\u30f3\u30bf\u30eb\u30d5\u30a3\u30eb\u30e0\u306e\u898b\u65b9\u3068\u7570\u5e38\u6240\u898b\u306e\u8aad\u307f\u53d6\u308a\u65b9\u3002",
+			Category: "RADIOLOGY", Procedure: "\u753b\u50cf\u8a3a\u65ad", SkillLevel: "BEGINNER", DurationSec: 600,
+			ThumbnailURL: "https://img.youtube.com/vi/Xfx8D4v5L70/hqdefault.jpg",
+			VideoURL: demo.VideoURL("v-10"), InstructorID: "inst-1",
+			Tags: []string{"\u653e\u5c04\u7dda", "\u8aad\u5f71", "\u30d1\u30ce\u30e9\u30de"}, ViewCount: 640, PublishedAt: now.AddDate(0, 0, -8), Featured: true,
 		},
 	}
 
@@ -86,9 +100,24 @@ func (s *Store) seed() {
 			EstimatedMinutes: 18, EnrolledCount: 256, CertificateTitle: "\u6b6f\u5468\u6cbb\u7642\u30b9\u30bf\u30fc\u30bf\u30fc\u4fee\u4e86",
 		},
 		{
-			ID: "path-3", Title: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u5916\u79d1 \u5165\u9580", Description: "\u30d5\u30e9\u30c3\u30d7\u304b\u3089\u57cb\u5165\u307e\u3067\u3001\u5916\u79d1\u7684\u30a2\u30d7\u30ed\u30fc\u30c1\u306e\u57fa\u790e\u3002",
-			Category: "IMPLANT", SkillLevel: "ADVANCED", VideoIDs: []string{"v-4", "v-8"},
-			EstimatedMinutes: 30, EnrolledCount: 64, CertificateTitle: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u5916\u79d1 \u5165\u9580\u4fee\u4e86",
+			ID: "path-3", Title: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u5916\u79d1 \u5165\u9580", Description: "\u57cb\u5165\u306e\u57fa\u790e\u304b\u3089\u5916\u79d1\u7684\u30a2\u30d7\u30ed\u30fc\u30c1\u307e\u3067\u3002",
+			Category: "IMPLANT", SkillLevel: "ADVANCED", VideoIDs: []string{"v-4", "v-5"},
+			EstimatedMinutes: 25, EnrolledCount: 64, CertificateTitle: "\u30a4\u30f3\u30d7\u30e9\u30f3\u30c8\u5916\u79d1 \u5165\u9580\u4fee\u4e86",
+		},
+		{
+			ID: "path-4", Title: "\u77ef\u6b63\u6cbb\u7642 \u5165\u9580", Description: "\u77ef\u6b63\u6cbb\u7642\u306e\u6d41\u308c\u3068\u60a3\u8005\u8aac\u660e\u306e\u57fa\u790e\u3002",
+			Category: "ORTHODONTICS", SkillLevel: "BEGINNER", VideoIDs: []string{"v-9"},
+			EstimatedMinutes: 10, EnrolledCount: 48, CertificateTitle: "\u77ef\u6b63\u6cbb\u7642 \u5165\u9580\u4fee\u4e86",
+		},
+		{
+			ID: "path-5", Title: "\u5c0f\u5150\u6b6f\u79d1 \u5165\u9580", Description: "\u521d\u8a3a\u5bfe\u5fdc\u3068\u884c\u52d5\u7ba1\u7406\u306e\u5b9f\u8df5\u30b9\u30ad\u30eb\u3002",
+			Category: "PEDIATRIC", SkillLevel: "BEGINNER", VideoIDs: []string{"v-7"},
+			EstimatedMinutes: 8, EnrolledCount: 72, CertificateTitle: "\u5c0f\u5150\u6b6f\u79d1 \u5165\u9580\u4fee\u4e86",
+		},
+		{
+			ID: "path-6", Title: "\u753b\u50cf\u8a3a\u65ad \u5165\u9580", Description: "\u53e3\u8154\u653e\u5c04\u7dda\u753b\u50cf\u306e\u8aad\u5f71\u306e\u57fa\u672c\u3002",
+			Category: "RADIOLOGY", SkillLevel: "BEGINNER", VideoIDs: []string{"v-10"},
+			EstimatedMinutes: 10, EnrolledCount: 56, CertificateTitle: "\u753b\u50cf\u8a3a\u65ad \u5165\u9580\u4fee\u4e86",
 		},
 	}
 

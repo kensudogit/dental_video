@@ -68,16 +68,56 @@ func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 	if err != nil {
 		return err
 	}
-	return repairDemoVideoURLs(ctx, db)
+	return repairDemoCatalog(ctx, db)
 }
 
-func repairDemoVideoURLs(ctx context.Context, db *DB) error {
-	for id, url := range demo.VideoEmbedURLs {
-		if _, err := db.Pool.Exec(ctx,
-			`UPDATE videos SET video_url=$2 WHERE id=$1 AND org_id='org_demo'`,
-			id, url,
+func repairDemoCatalog(ctx context.Context, db *DB) error {
+	for _, v := range demo.CatalogVideos() {
+		if _, err := db.Pool.Exec(ctx, `
+			INSERT INTO videos (id, org_id, instructor_id, title, description, category, procedure, skill_level,
+				duration_sec, thumbnail_url, video_url, featured, published_at)
+			VALUES ($1, 'org_demo', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+			ON CONFLICT (id) DO UPDATE SET
+				instructor_id = EXCLUDED.instructor_id,
+				title = EXCLUDED.title,
+				description = EXCLUDED.description,
+				category = EXCLUDED.category,
+				procedure = EXCLUDED.procedure,
+				skill_level = EXCLUDED.skill_level,
+				duration_sec = EXCLUDED.duration_sec,
+				thumbnail_url = EXCLUDED.thumbnail_url,
+				video_url = EXCLUDED.video_url,
+				featured = EXCLUDED.featured`,
+			v.ID, v.InstructorID, v.Title, v.Description, v.Category, v.Procedure, v.SkillLevel,
+			v.DurationSec, v.ThumbnailURL(), v.EmbedURL(), v.Featured,
 		); err != nil {
 			return err
+		}
+	}
+
+	for _, p := range demo.CategoryPaths() {
+		if _, err := db.Pool.Exec(ctx, `
+			INSERT INTO learning_paths (id, org_id, title, description, category, skill_level, estimated_minutes, enrolled_count, certificate_title)
+			VALUES ($1, 'org_demo', $2, $3, $4, $5, $6, $7, $8)
+			ON CONFLICT (id) DO UPDATE SET
+				title = EXCLUDED.title,
+				description = EXCLUDED.description,
+				category = EXCLUDED.category,
+				skill_level = EXCLUDED.skill_level,
+				estimated_minutes = EXCLUDED.estimated_minutes,
+				certificate_title = EXCLUDED.certificate_title`,
+			p.ID, p.Title, p.Description, p.Category, p.SkillLevel, p.EstimatedMinutes, p.EnrolledCount, p.Certificate,
+		); err != nil {
+			return err
+		}
+		for i, vid := range p.VideoIDs {
+			if _, err := db.Pool.Exec(ctx, `
+				INSERT INTO path_videos (path_id, video_id, sort_order) VALUES ($1, $2, $3)
+				ON CONFLICT (path_id, video_id) DO UPDATE SET sort_order = EXCLUDED.sort_order`,
+				p.ID, vid, i+1,
+			); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
