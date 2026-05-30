@@ -8,6 +8,9 @@ import './globals.css'
 const noto = Noto_Sans_JP({
   weight: ['400', '500', '700'],
   display: 'swap',
+  // CJK fonts cannot be preloaded as a single subset in next/font (Next.js #44594).
+  preload: false,
+  fallback: ['Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'sans-serif'],
 })
 
 export const metadata: Metadata = {
