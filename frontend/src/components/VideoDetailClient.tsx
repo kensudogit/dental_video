@@ -94,7 +94,8 @@ export function VideoDetailClient({
 
   return (
     <div className="video-actions panel">
-      <div className="row">
+      <h3>{ui.learningActions}</h3>
+      <div className="row video-actions__progress">
         <label>
           {ui.playbackPos}
           <input
@@ -115,7 +116,7 @@ export function VideoDetailClient({
           {isBookmarked ? ui.bookmarkRemove : ui.bookmarkAdd}
         </button>
       </div>
-      <div className="row">
+      <div className="row video-actions__note">
         <label>
           {ui.timestampNotes}
           <input type="number" min={0} max={durationSec} value={noteTime} onChange={(e) => setNoteTime(Number(e.target.value))} />
@@ -125,7 +126,6 @@ export function VideoDetailClient({
           placeholder={ui.notePlaceholder}
           value={noteBody}
           onChange={(e) => setNoteBody(e.target.value)}
-          style={{ flex: 1 }}
         />
         <button type="button" className="btn" disabled={busy} onClick={addNote}>
           {ui.addNote}

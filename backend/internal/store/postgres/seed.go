@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pluszero/dental-video-api/internal/auth"
+	"github.com/pluszero/dental-video-api/internal/demo"
 )
 
 const demoEmail = "demo@sakura-dental.jp"
@@ -64,7 +65,22 @@ func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 		UPDATE case_discussions SET title=$2, summary=$3
 		WHERE id=$1 AND org_id='org_demo'`,
 		"case-1", "難抜歯症例", "分割抜歯の判断")
-	return err
+	if err != nil {
+		return err
+	}
+	return repairDemoVideoURLs(ctx, db)
+}
+
+func repairDemoVideoURLs(ctx context.Context, db *DB) error {
+	for id, url := range demo.VideoEmbedURLs {
+		if _, err := db.Pool.Exec(ctx,
+			`UPDATE videos SET video_url=$2 WHERE id=$1 AND org_id='org_demo'`,
+			id, url,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func insertDemoOrg(ctx context.Context, db *DB, hash string) error {
@@ -200,11 +216,11 @@ func seedDemo(ctx context.Context, db *DB) error {
 	}
 	videos := []vid{
 		{"v-1", "\u6839\u7ba1\u6cbb\u7642 Step1", "\u958b\u7a9e\u3068\u30a2\u30af\u30bb\u30b9", "ENDODONTICS", "\u6839\u7ba1\u6cbb\u7642", "BEGINNER", 720,
-			"https://placehold.co/640x360/0d9488/fff?text=Endo", "https://www.youtube.com/embed/dQw4w9WgXcQ", "inst-1", true},
+			"https://placehold.co/640x360/0d9488/fff?text=Endo", demo.VideoURL("v-1"), "inst-1", true},
 		{"v-3", "SRP \u57fa\u672c\u624b\u6280", "SRP\u57fa\u790e", "PERIODONTICS", "SRP", "BEGINNER", 600,
-			"https://placehold.co/640x360/059669/fff?text=SRP", "https://www.youtube.com/embed/dQw4w9WgXcQ", "inst-2", true},
+			"https://placehold.co/640x360/059669/fff?text=SRP", demo.VideoURL("v-3"), "inst-2", true},
 		{"v-6", "\u611f\u67d3\u5bfe\u7b56", "\u6ec1\u83cc\u30b5\u30a4\u30af\u30eb", "INFECTION_CONTROL", "\u6ec1\u83cc", "BEGINNER", 480,
-			"https://placehold.co/640x360/475569/fff?text=Sterile", "https://www.youtube.com/embed/dQw4w9WgXcQ", "inst-2", true},
+			"https://placehold.co/640x360/475569/fff?text=Sterile", demo.VideoURL("v-6"), "inst-2", true},
 	}
 	for _, v := range videos {
 		_, err = tx.Exec(ctx, `
