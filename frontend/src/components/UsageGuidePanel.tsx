@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const STORAGE_KEY = 'dental-video-usage-guide-v6'
+const STORAGE_KEY = 'dental-video-usage-guide-v7'
 const PANEL_WIDTH = 380
 
 type GuideStep = {
@@ -11,11 +11,27 @@ type GuideStep = {
   items?: readonly string[]
 }
 
+const orgSettingsGuide = {
+  title: 'Organization settings (SaaS) / 組織設定',
+  body: '/settings でクリニック（テナント）の管理画面。PostgreSQL 接続 + ログインが必要です。',
+  items: [
+    '左メニュー「組織設定」または /settings',
+    'デモ: demo@sakura-dental.jp / demo1234',
+    '【編集可】クリニック名・slug・席数・タイムゾーン → Save',
+    '【参照のみ】プラン・契約状態・メンバー数',
+    '【利用量】Members / Videos / API（今月）の上限対比',
+    '【Team】メンバー一覧（OWNER / ADMIN / MEMBER / VIEWER）',
+    'テナント分離: ログイン org の org_id でデータを分離',
+  ],
+} as const
+
 const L = {
   title: '利用手順',
   dragHint: 'ドラッグで移動',
   expand: '開く',
   collapse: '閉じる',
+  scrollHint: '↓ スクロールでデプロイ・開発手順も表示されます',
+  orgSettingsLabel: 'SaaS',
   footer:
     '▼▲ で開閉、ヘッダーをドラッグして好きな位置に移動できます。表示位置は自動保存されます。',
   steps: [
@@ -45,23 +61,13 @@ const L = {
       items: [
         '/login → demo@sakura-dental.jp / demo1234',
         'ログイン後 JWT クッキー (dv_token) が発行され GraphQL がテナント別に',
-        '組織管理の詳細 → 手順 4「Organization settings (SaaS)」',
+        '組織管理の詳細 → 上部「Organization settings (SaaS) / 組織設定」',
       ],
     },
     {
-      title: '4. Organization settings (SaaS)',
-      body: '/settings でクリニック（テナント）の管理画面。PostgreSQL + ログインが必要です。',
-      items: [
-        '左メニュー「組織設定」または /settings を開く',
-        '未ログイン → ログイン案内のみ（デモ: demo@sakura-dental.jp / demo1234）',
-        'メモリモード（DATABASE_URL 未設定）では利用不可',
-        '【編集可】クリニック名・slug（URL 識別子）・席数・タイムゾーン → Save',
-        '【参照のみ】プラン（FREE/PRO 等）・契約状態（ACTIVE 等）・メンバー数',
-        '【利用量】Members / Videos / API（今月）の使用数と上限',
-        '【Team】所属メンバー一覧（名前・メール・OWNER / ADMIN / MEMBER / VIEWER）',
-        'テナント分離: org_id ごとに動画・進捗・設定を分離（他院のデータは見えない）',
-        '未ログイン閲覧はデモ org（org_demo）のカタログのみ表示',
-      ],
+      title: '4. 組織設定 (Organization settings · SaaS)',
+      body: orgSettingsGuide.body,
+      items: [...orgSettingsGuide.items],
     },
     {
       title: '5. Docker ローカル（推奨）',
@@ -261,6 +267,19 @@ export function UsageGuidePanel() {
 
       {expanded ? (
         <div className="usage-guide-body">
+          <section className="usage-guide-featured" aria-label={orgSettingsGuide.title}>
+            <div className="usage-guide-featured-head">
+              <span className="usage-guide-featured-badge">{L.orgSettingsLabel}</span>
+              <strong>{orgSettingsGuide.title}</strong>
+            </div>
+            <p>{orgSettingsGuide.body}</p>
+            <ul className="usage-guide-items">
+              {orgSettingsGuide.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+          <p className="usage-guide-scroll-hint">{L.scrollHint}</p>
           <ol className="usage-guide-steps">
             {L.steps.map((step) => (
               <li key={step.title}>
