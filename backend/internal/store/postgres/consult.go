@@ -1,5 +1,7 @@
 package postgres
 
+// AI 臨床相談スレッドと月次トークン利用量
+
 import (
 	"context"
 	"time"

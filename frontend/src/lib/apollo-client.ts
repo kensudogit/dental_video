@@ -1,7 +1,12 @@
 'use client'
 
+/**
+ * ブラウザ用 Apollo Client シングルトン。
+ * Mutation / Query は同一オリジン /graphql + credentials: include。
+ */
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
 
+/** SSR 初回は API_URL 直叩き、クライアントは Next プロキシ経由 */
 function graphqlHttpUri(): string {
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/graphql`

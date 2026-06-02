@@ -1,3 +1,4 @@
+// Package api（補助）— CORS 許可オリジンの環境変数解釈。
 package api
 
 import (
@@ -5,6 +6,7 @@ import (
 	"strings"
 )
 
+// corsOrigins は CORS_ORIGINS 未設定時にローカル Next.js 開発用オリジンを返す。
 func corsOrigins() []string {
 	raw := os.Getenv("CORS_ORIGINS")
 	if raw == "" {

@@ -1,9 +1,9 @@
+// Package demo は org_demo 向けの共有カタログ定義（メモリ/Postgres シードの単一ソース）。
 package demo
 
 import "fmt"
 
-// CatalogVideo holds demo catalog metadata shared by memory seed and PostgreSQL repair.
-// Japanese strings use \u escapes so source files stay UTF-8 safe on all platforms.
+// CatalogVideo はデモ動画のメタデータ。日本語は \u エスケープで全環境のソース互換を保つ。
 type CatalogVideo struct {
 	ID           string
 	Title        string
@@ -25,7 +25,7 @@ func (v CatalogVideo) ThumbnailURL() string {
 	return fmt.Sprintf("https://img.youtube.com/vi/%s/hqdefault.jpg", v.YouTubeID)
 }
 
-// CatalogVideos returns the full demo video catalog for org_demo.
+// CatalogVideos は org_demo に投入する全デモ動画一覧を返す。
 func CatalogVideos() []CatalogVideo {
 	return []CatalogVideo{
 		{
@@ -91,7 +91,7 @@ func CatalogVideos() []CatalogVideo {
 	}
 }
 
-// LearningPaths returns demo learning paths upserted on startup.
+// LearningPaths は起動時に upsert するデモ学習パス定義。
 func LearningPaths() []struct {
 	ID, Title, Description, Category, SkillLevel, Certificate string
 	VideoIDs                                                   []string

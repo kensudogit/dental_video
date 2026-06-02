@@ -1,3 +1,6 @@
+/**
+ * 動画一覧・ダッシュボード用カード（サムネ・分野・難易度・尺）。
+ */
 import Image from 'next/image'
 import Link from 'next/link'
 import type { SkillLevel, VideoCategory } from '@/lib/generated/graphql'

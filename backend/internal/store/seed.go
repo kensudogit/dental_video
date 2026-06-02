@@ -1,5 +1,7 @@
 package store
 
+// インメモリストア向けの日本語デモカタログ（postgres/seed と内容を揃える）
+
 import (
 	"time"
 
@@ -7,6 +9,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/models"
 )
 
+// seed は講師・動画・学習パス・クイズ等の初期データを投入する。
 func (s *Store) seed() {
 	now := time.Now()
 	s.instructors = []models.Instructor{

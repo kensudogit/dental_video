@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * Apollo（Query/Mutation）と urql（Subscription）を併用する Provider ラッパー。
+ */
 import { ApolloProvider } from '@apollo/client/react'
 import { Provider as UrqlProvider } from 'urql'
 import { getApolloClient } from '@/lib/apollo-client'

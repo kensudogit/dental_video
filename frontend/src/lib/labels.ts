@@ -1,3 +1,6 @@
+/**
+ * GraphQL enum の日本語ラベルと動画尺フォーマット。
+ */
 import type { SkillLevel, VideoCategory } from '@/lib/generated/graphql'
 
 export const categoryLabels: Record<VideoCategory, string> = {

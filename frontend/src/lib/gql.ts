@@ -1,3 +1,7 @@
+/**
+ * SSR / RSC 向け GraphQL クライアント。
+ * ブラウザは同一オリジン /graphql、サーバーは候補 API ベースを順に試行する。
+ */
 import { print } from 'graphql'
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
@@ -12,6 +16,7 @@ export class GraphQLClientError extends Error {
   }
 }
 
+/** RSC から Go API へセッション Cookie を転送する */
 async function serverCookieHeader(): Promise<string | undefined> {
   if (typeof window !== 'undefined') return undefined
   try {
@@ -36,6 +41,7 @@ async function postGraphQL(body: string): Promise<Response> {
     cache: 'no-store',
   }
 
+  // クライアントは Next プロキシ経由、サーバーは複数ベース URL をフォールバック
   const urls =
     typeof window !== 'undefined'
       ? ['/graphql']
@@ -46,6 +52,7 @@ async function postGraphQL(body: string): Promise<Response> {
     try {
       const res = await fetch(url, init)
       if (res.ok) return res
+      // 502/503 のみ次候補へ。401 等のアプリエラーはそのまま返す
       if (res.status === 502 || res.status === 503) {
         failures.push(`${url}: HTTP ${res.status}`)
         continue

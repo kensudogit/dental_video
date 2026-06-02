@@ -1,3 +1,6 @@
+/**
+ * GraphQL / Apollo エラーの種別判定とユーザー向けヒント。
+ */
 import { graphQLConnectionHint } from '@/lib/resolve-api-url'
 
 type GraphQLErrorLike = {
@@ -6,6 +9,7 @@ type GraphQLErrorLike = {
   networkError?: Error | null
 }
 
+/** メッセージ文字列から認証必須エラーか推定 */
 function messageLooksAuthRequired(message: string): boolean {
   const m = message.toLowerCase()
   return (
@@ -53,6 +57,7 @@ function messageLooksSqlError(message: string): boolean {
   )
 }
 
+/** エラーメッセージからユーザー向け日本語ヒントを返す */
 export function graphQLErrorHint(message: string | null | undefined): string {
   const text = message ?? ''
   if (messageLooksAuthRequired(text)) {

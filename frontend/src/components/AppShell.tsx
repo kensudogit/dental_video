@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * アプリ共通レイアウト: サイドバー・トップバー・利用手順パネル。
+ */
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -22,6 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [navOpen, setNavOpen] = useState(false)
 
+  // ページ遷移時にモバイルメニューを閉じる
   useEffect(() => {
     setNavOpen(false)
   }, [pathname])
@@ -45,6 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="sidebar-nav">
           {nav.map((item) => {
             const active =
+              // ホームのみ完全一致、他はプレフィックス一致
               item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
             return (
               <Link

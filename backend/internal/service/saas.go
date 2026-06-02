@@ -1,5 +1,7 @@
 package service
 
+// 組織（クリニック）設定・チーム・利用量 — 認証必須の SaaS 管理 API
+
 import (
 	"context"
 

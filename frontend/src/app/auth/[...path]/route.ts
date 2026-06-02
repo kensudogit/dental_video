@@ -1,3 +1,6 @@
+/**
+ * /auth/* を Go API 認証エンドポイントへプロキシ（ログイン Cookie 中継）。
+ */
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
 import { proxyToApiBases } from '@/lib/proxy-fetch'
 

@@ -1,3 +1,4 @@
+/** ダッシュボード（おすすめ動画・学習パス・統計）。SSR で GraphQL を取得。 */
 import Link from 'next/link'
 import { LearningLivePanel } from '@/components/LearningLivePanel'
 import { StatCard } from '@/components/StatCard'

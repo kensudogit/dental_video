@@ -1,3 +1,4 @@
+// Package store は DATABASE_URL 未設定時のインメモリ実装（ローカル開発・デモ用）。
 package store
 
 import (
@@ -11,6 +12,7 @@ import (
 
 const demoLearnerID = "learner-demo"
 
+// Store は組織横断のデモデータをプロセス内に保持する（本番は postgres パッケージ）。
 type Store struct {
 	mu           sync.RWMutex
 	instructors  []models.Instructor
@@ -25,6 +27,7 @@ type Store struct {
 	enrollments  map[string]map[string]bool // learnerId -> pathId
 }
 
+// New は歯科教育向けサンプルカタログをシードした Store を返す。
 func New() *Store {
 	s := &Store{enrollments: map[string]map[string]bool{}}
 	s.seed()
@@ -388,6 +391,7 @@ func (s *Store) SubmitQuizAttempt(quizID, learnerID string, answers []int) (mode
 	return attempt, true
 }
 
+// maybeIssuePathCertificate はパス内全動画完了時に修了証を自動発行する。
 func (s *Store) maybeIssuePathCertificate(learnerID, videoID string) {
 	for _, path := range s.paths {
 		allDone := len(path.VideoIDs) > 0

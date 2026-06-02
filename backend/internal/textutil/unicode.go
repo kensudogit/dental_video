@@ -1,3 +1,4 @@
+// Package textutil は DB や JSON 経由で壊れた日本語文字列の修復ユーティリティ。
 package textutil
 
 import (
@@ -5,8 +6,8 @@ import (
 	"strings"
 )
 
-// DecodeJSONUnicodeEscapes converts literal \uXXXX sequences into UTF-8 runes.
-// Some early SQL seeds stored escapes as plain text instead of Unicode.
+// DecodeJSONUnicodeEscapes はリテラル \uXXXX を UTF-8 文字に戻す。
+// 初期シードでエスケープがそのまま DB に入った行の表示用。
 func DecodeJSONUnicodeEscapes(s string) string {
 	if !strings.Contains(s, `\u`) {
 		return s

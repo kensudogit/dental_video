@@ -2,7 +2,7 @@ package graph
 
 import "github.com/pluszero/dental-video-api/internal/service"
 
-// Resolver is the gqlgen root resolver.
+// Resolver は gqlgen のルートリゾルバ（ビジネスロジックは service 層へ委譲）。
 type Resolver struct {
 	svc     *service.Service
 	loaders *Loaders

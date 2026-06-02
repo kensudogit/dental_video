@@ -1,3 +1,4 @@
+/** 動画詳細（再生・進捗・ノート・ブックマーク・クイズ）。 */
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CategoryBadge } from '@/components/CategoryBadge'

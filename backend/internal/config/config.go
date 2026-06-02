@@ -1,3 +1,4 @@
+// Package config は Railway/ローカル向けの環境変数と SaaS セットアップ診断を読み込む。
 package config
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strings"
 )
 
+// Config はアプリ全体で共有するランタイム設定。
 type Config struct {
 	Port              string
 	DatabaseURL       string
@@ -28,6 +30,7 @@ type Config struct {
 	EnableMemoryStore bool
 }
 
+// Load は環境変数から Config を構築する（DB 未設定時はメモリストアへフォールバック可）。
 func Load() Config {
 	db, source := resolveDatabaseURL()
 	jwt := strings.TrimSpace(os.Getenv("JWT_SECRET"))
@@ -57,6 +60,7 @@ func Load() Config {
 	if model == "" {
 		model = "gpt-4o-mini"
 	}
+	// Railway 本番では原則 Postgres 必須。ローカルや明示フラグ時のみインメモリ。
 	memoryExplicit := os.Getenv("USE_MEMORY_STORE") == "true"
 	enableMemory := db == "" && (!IsRailway() || memoryExplicit)
 	if memoryExplicit {
@@ -83,6 +87,7 @@ func Load() Config {
 	}
 }
 
+// S3Enabled は動画プリサインドアップロードが利用可能か。
 func (c Config) S3Enabled() bool {
 	return c.S3Bucket != "" && c.S3AccessKey != "" && c.S3SecretKey != ""
 }
@@ -91,6 +96,7 @@ func (c Config) OpenAIEnabled() bool {
 	return c.OpenAIAPIKey != ""
 }
 
+// IsRailway は Railway 上で動作しているか（DB SSL・メモリストア方針の判定用）。
 func IsRailway() bool {
 	return os.Getenv("RAILWAY_ENVIRONMENT") != "" ||
 		os.Getenv("RAILWAY_PROJECT_ID") != "" ||
@@ -115,7 +121,7 @@ func envPresence(key string) string {
 	return "set"
 }
 
-// SetupStatus describes SaaS env configuration (no secrets).
+// SetupStatus は秘密情報を含まない SaaS 環境の診断マップを返す（/status 用）。
 func SetupStatus(postgresConnected bool, dbSource string) map[string]any {
 	jwt := strings.TrimSpace(os.Getenv("JWT_SECRET"))
 	out := map[string]any{
@@ -214,7 +220,7 @@ func databaseURLFromComponents() (string, string, bool) {
 	return u.String(), "PGHOST", true
 }
 
-// normalizeDatabaseURL appends sslmode=require on Railway when the URL omits it.
+// normalizeDatabaseURL は Railway 向けに sslmode=require を付与する（URL に無い場合）。
 func normalizeDatabaseURL(raw string) string {
 	if raw == "" {
 		return ""
@@ -231,7 +237,7 @@ func normalizeDatabaseURL(raw string) string {
 	return raw + "?sslmode=require"
 }
 
-// RailwayDatabaseRequiredError is returned when Postgres is missing on Railway.
+// RailwayDatabaseRequiredError は Railway で DATABASE_URL 未設定のときに返す。
 func RailwayDatabaseRequiredError() error {
 	return fmt.Errorf(
 		"DATABASE_URL is required on Railway: open the app service (not Postgres) → Variables → New Variable → Reference → Postgres DATABASE_URL, set JWT_SECRET, then Redeploy",

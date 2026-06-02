@@ -1,3 +1,4 @@
+/** ダッシュボード KPI 用の色付き統計カード */
 type Accent = 'cyan' | 'violet' | 'emerald' | 'amber'
 
 const accentClass: Record<Accent, string> = {

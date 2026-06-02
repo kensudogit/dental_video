@@ -1,4 +1,4 @@
-/** UI copy (Unicode escapes for encoding safety) */
+/** UI 文言定義（Unicode エスケープでエンコーディング安全） */
 export const ui = {
   appTitle: 'Dental Video',
   appSubtitle: '\u6b6f\u79d1\u533b\u7642\u6280\u8853\u5411\u4e0a\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0',

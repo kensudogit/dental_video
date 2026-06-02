@@ -1,5 +1,7 @@
 package auth
 
+// GraphQL/REST 共通の認証コンテキスト注入
+
 import (
 	"context"
 	"net/http"
@@ -8,8 +10,10 @@ import (
 	"github.com/pluszero/dental-video-api/internal/tenant"
 )
 
+// APIKeyLookup はライブ配信等のサーバー間連携用 API キーを組織に紐づける。
 type APIKeyLookup func(prefix, secret string) (tenant.Principal, bool)
 
+// Middleware は Authorization Bearer、dv_token Cookie、X-API-Key の順で Principal を解決する。
 func Middleware(secret string, lookup APIKeyLookup) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +47,7 @@ func Middleware(secret string, lookup APIKeyLookup) func(http.Handler) http.Hand
 			}
 			if lookup != nil {
 				if key := strings.TrimSpace(r.Header.Get("X-API-Key")); key != "" {
-					const prefix = "dv_live_"
+					const prefix = "dv_live_" // プレフィックスで本番キーと他用途を区別
 					if strings.HasPrefix(key, prefix) {
 						if p, ok := lookup(prefix, strings.TrimPrefix(key, prefix)); ok {
 							ctx = tenant.WithPrincipal(ctx, p)

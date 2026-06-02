@@ -1,3 +1,4 @@
+/** マイ学習（視聴進捗・ブックマーク・修了証）。 */
 import Link from 'next/link'
 import { LearningPageDocument, type LearningPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'

@@ -1,3 +1,4 @@
+// Package api は REST エンドポイントと GraphQL の HTTP ルーティングを提供する。
 package api
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/service"
 )
 
+// NewRouter はヘルスチェック・認証・GraphQL を含む chi ルータを組み立てる。
 func NewRouter(svc *service.Service) http.Handler {
 	h := NewHandler(svc)
 	authH := &AuthHandler{svc: svc}
@@ -24,6 +26,7 @@ func NewRouter(svc *service.Service) http.Handler {
 	origins := svc.Cfg.AllowedOrigins
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
+		// Railway プレビュー URL は CORS_ORIGINS 未登録でも許可（デプロイ先の都合）
 		AllowOriginFunc:  func(_ *http.Request, origin string) bool { return strings.Contains(origin, ".railway.app") || origin == "" },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-API-Key"},

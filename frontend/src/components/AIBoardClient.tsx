@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * AI Board: 学習 KPI 表示と OpenAI 経営インサイト生成。
+ */
 import { useMutation, useQuery } from '@apollo/client/react'
 import { useState } from 'react'
 import {
@@ -55,6 +58,7 @@ export function AIBoardClient() {
               <div key={k.label} className="stat-card">
                 <div className="stat-label">{kpiLabels[k.label] ?? k.label}</div>
                 <div className="stat-value">
+                  {/* watch_hours のみ小数 1 桁表示 */}
                   {k.value.toFixed(k.label === 'watch_hours' ? 1 : 0)}
                   {k.unit ? ` ${k.unit}` : ''}
                 </div>
@@ -71,6 +75,7 @@ export function AIBoardClient() {
             <div className="bar-chart">
               {board.watchHoursByWeek.map((h, i) => (
                 <div key={i} className="bar-col">
+                  {/* 週次時間を棒グラフ高さに正規化（最大 5h ≒ 100%） */}
                   <div className="bar-fill" style={{ height: `${Math.min(100, h * 20)}%` }} />
                   <span>W{i + 1}</span>
                   <em>{h.toFixed(1)}h</em>

@@ -1,3 +1,4 @@
+// Package gqlconv は domain models を gqlgen 生成型へ変換する（GraphQL 境界）。
 package gqlconv
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/textutil"
 )
 
+// txt は DB に \uXXXX が文字列のまま残った日本語フィールドを復元する。
 func txt(s string) string {
 	return textutil.DecodeJSONUnicodeEscapes(s)
 }

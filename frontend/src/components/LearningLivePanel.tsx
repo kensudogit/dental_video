@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * urql Subscription で学習進捗・ダッシュボード更新をリアルタイム表示。
+ */
 import { useEffect, useState } from 'react'
 import { useSubscription } from 'urql'
 import {
@@ -52,6 +55,7 @@ export function LearningLivePanel() {
   useEffect(() => {
     const ev = activity.data?.learningActivity
     if (ev) {
+      // 最新 8 件のみ保持
       setFeed((rows) => [{ kind: ev.kind, message: ev.message, occurredAt: ev.occurredAt }, ...rows].slice(0, 8))
     }
   }, [activity.data])

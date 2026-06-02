@@ -1,5 +1,7 @@
 package postgres
 
+// 組織・チーム・API キー・監査ログ・カスタムドメイン解決
+
 import (
 	"context"
 	"errors"
@@ -162,7 +164,7 @@ func (db *DB) AppendAudit(ctx context.Context, e models.AuditLogEntry) error {
 	return err
 }
 
-// ResolveOrgByHost maps custom domain or slug host to org (SaaS isolation).
+// ResolveOrgByHost はカスタムドメインまたは slug から組織 ID を解決する（テナント分離）。
 func (db *DB) ResolveOrgByHost(ctx context.Context, host string) (string, error) {
 	var id string
 	err := db.Pool.QueryRow(ctx, `

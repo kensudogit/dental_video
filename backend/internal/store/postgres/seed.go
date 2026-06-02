@@ -1,5 +1,7 @@
 package postgres
 
+// デモクリニック（org_demo）の投入と文字化け修復 — 本番デモログイン用
+
 import (
 	"context"
 	"errors"
@@ -11,8 +13,9 @@ import (
 )
 
 const demoEmail = "demo@sakura-dental.jp"
-const demoPassword = "demo1234"
+const demoPassword = "demo1234" // デモ環境向け既知パスワード（本番は別途ローテーション推奨）
 
+// ensureDemoCredentials は org_demo とデモユーザーを常にログイン可能な状態に保つ。
 func ensureDemoCredentials(ctx context.Context, db *DB) error {
 	hash, err := auth.HashPassword(demoPassword)
 	if err != nil {
@@ -46,6 +49,7 @@ func ensureDemoCredentials(ctx context.Context, db *DB) error {
 	return repairDemoTextEncoding(ctx, db)
 }
 
+// repairDemoTextEncoding は過去マイグレーションで文字化けした日本語ラベルを上書き修復する。
 func repairDemoTextEncoding(ctx context.Context, db *DB) error {
 	_, err := db.Pool.Exec(ctx, `
 		UPDATE live_sessions SET title=$2, description=$3

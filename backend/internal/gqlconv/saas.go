@@ -1,5 +1,7 @@
 package gqlconv
 
+// SaaS 組織・分析系の GraphQL 変換
+
 import (
 	"github.com/pluszero/dental-video-api/internal/graph/generated"
 	"github.com/pluszero/dental-video-api/internal/models"

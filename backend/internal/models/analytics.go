@@ -1,3 +1,4 @@
+// AI Board 用 KPI・集計の型定義。
 package models
 
 type AnalyticsKpi struct {

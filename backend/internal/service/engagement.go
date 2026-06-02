@@ -1,5 +1,7 @@
 package service
 
+// ブックマーク・ノート・クイズ・証明書と、サブスクリプション向けリアルタイム通知
+
 import (
 	"context"
 	"time"
@@ -196,6 +198,7 @@ func (s *Service) ListCertificates(ctx context.Context, learnerID string) ([]mod
 	return nil, nil
 }
 
+// UpdateProgressWithEvents は視聴進捗更新後に WebSocket 購読者へダッシュボード/活動を配信する。
 func (s *Service) UpdateProgressWithEvents(ctx context.Context, p models.WatchProgress) (models.WatchProgress, error) {
 	updated, err := s.UpdateProgress(ctx, p)
 	if err != nil {

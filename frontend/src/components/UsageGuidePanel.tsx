@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * 画面右下のドラッグ可能な利用手順パネル（localStorage で位置・開閉を保存）。
+ */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const STORAGE_KEY = 'dental-video-usage-guide-v7'
@@ -156,6 +159,7 @@ export function UsageGuidePanel() {
   const [pos, setPos] = useState({ x: 24, y: 24 })
   const [dragging, setDragging] = useState(false)
 
+  // 初回マウント時に保存済み位置を復元（SSR 不一致回避のため ready まで非表示）
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -192,6 +196,7 @@ export function UsageGuidePanel() {
   const onHeaderPointerDown = useCallback(
     (e: React.PointerEvent<HTMLElement>) => {
       if ((e.target as HTMLElement).closest('.usage-guide-toggle')) return
+      // 開閉ボタン上ではドラッグ開始しない
       dragRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,

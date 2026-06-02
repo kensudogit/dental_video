@@ -1,3 +1,4 @@
+// Package postgres はマルチテナント SaaS の永続化層（pgx + 埋め込みマイグレーション）。
 package postgres
 
 import (
@@ -13,10 +14,12 @@ import (
 	"github.com/pluszero/dental-video-api/migrations"
 )
 
+// DB は接続プールとマイグレーション・シードのエントリを持つ。
 type DB struct {
 	Pool *pgxpool.Pool
 }
 
+// Connect は DATABASE_URL でプールを開き疎通確認する。
 func Connect(databaseURL string) (*DB, error) {
 	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
@@ -40,6 +43,7 @@ func (db *DB) Close() {
 	db.Pool.Close()
 }
 
+// Migrate は未適用 SQL を schema_migrations で追跡しながら適用する。
 func (db *DB) Migrate() error {
 	ctx := context.Background()
 	if _, err := db.Pool.Exec(ctx, `
@@ -83,6 +87,7 @@ func (db *DB) applyFromFS(ctx context.Context, filesystem fs.FS) error {
 	return nil
 }
 
+// migrateFromDisk は embed 失敗時のローカル開発フォールバック。
 func (db *DB) migrateFromDisk(ctx context.Context) error {
 	paths := []string{"migrations/001_init.sql", "backend/migrations/001_init.sql"}
 	for _, p := range paths {
@@ -124,6 +129,7 @@ func (db *DB) applyOne(ctx context.Context, filename, sql string) error {
 	return tx.Commit(ctx)
 }
 
+// SeedIfEmpty は初回デプロイ用デモ組織を投入し、既存 DB でもデモ文言を修復する。
 func (db *DB) SeedIfEmpty(ctx context.Context) error {
 	var n int
 	if err := db.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM organizations`).Scan(&n); err != nil {

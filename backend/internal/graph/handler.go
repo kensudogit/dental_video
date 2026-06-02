@@ -1,3 +1,4 @@
+// Package graph は gqlgen サーバ・認証ミドルウェア・GraphiQL の HTTP 登録を行う。
 package graph
 
 import (
@@ -17,6 +18,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/service"
 )
 
+// RegisterRoutes は /graphql と /graphiql を chi ルータにマウントする。
 func RegisterRoutes(r chi.Router, svc *service.Service) error {
 	resolver := NewResolver(svc)
 	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
@@ -49,6 +51,7 @@ func RegisterRoutes(r chi.Router, svc *service.Service) error {
 	srv.AddTransport(transport.POST{})
 	srv.Use(extension.Introspection{})
 
+	// 認証 → DataLoader の順でコンテキストを enrich
 	authed := auth.Middleware(svc.Cfg.JWTSecret, svc.APIKeyLookup)(resolver.loaders.Middleware(srv))
 	r.Handle("/graphql", authed)
 	r.Handle("/graphiql", playground.Handler("Dental Video GraphQL", "/graphql"))

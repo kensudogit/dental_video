@@ -1,3 +1,4 @@
+/** 学習パス詳細（カリキュラム動画・登録）。 */
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { EnrollPathButton } from '@/components/EnrollPathButton'

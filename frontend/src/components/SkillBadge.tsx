@@ -1,3 +1,4 @@
+/** 難易度 enum のバッジ表示 */
 import type { SkillLevel } from '@/lib/generated/graphql'
 import { skillLabels } from '@/lib/labels'
 

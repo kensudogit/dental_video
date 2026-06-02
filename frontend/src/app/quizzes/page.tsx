@@ -1,3 +1,4 @@
+/** 理解度テスト一覧。 */
 import Link from 'next/link'
 import { QuizzesPageDocument, type QuizzesPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'

@@ -1,5 +1,7 @@
 package postgres
 
+// ノート・ブックマーク・クイズ・修了証など学習者エンゲージメント
+
 import (
 	"context"
 	"fmt"
@@ -247,6 +249,7 @@ func (db *DB) ListCertificates(ctx context.Context, orgID, learnerID string) ([]
 	return out, rows.Err()
 }
 
+// maybeIssueCertificate は学習パス内の全動画完了時に証明書を1回だけ発行する。
 func (db *DB) maybeIssueCertificate(ctx context.Context, orgID, learnerID, videoID string) error {
 	rows, err := db.Pool.Query(ctx, `
 		SELECT lp.id, lp.certificate_title, array_agg(pv.video_id ORDER BY pv.sort_order)

@@ -1,3 +1,4 @@
+// マルチテナント SaaS（組織・チーム・利用量）の型定義。
 package models
 
 import "time"

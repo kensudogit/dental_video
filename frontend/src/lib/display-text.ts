@@ -1,4 +1,6 @@
-/** Decode literal \\uXXXX sequences sometimes stored in demo seed rows. */
+/**
+ * デモシードに残る \\uXXXX リテラルを Unicode 文字へ復号する。
+ */
 export function displayText(value: string | null | undefined): string {
   if (!value) return ''
   if (!value.includes('\\u')) return value

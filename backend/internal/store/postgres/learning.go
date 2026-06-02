@@ -1,5 +1,7 @@
 package postgres
 
+// 学習パス・視聴進捗・パス受講登録
+
 import (
 	"context"
 	"strconv"

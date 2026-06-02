@@ -1,3 +1,4 @@
+/** 理解度テスト受験画面。 */
 import { notFound } from 'next/navigation'
 import { QuizTakeForm } from '@/components/QuizTakeForm'
 import { QuizTakePageDocument, type QuizTakePageQuery } from '@/lib/generated/graphql'

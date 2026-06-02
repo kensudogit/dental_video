@@ -1,5 +1,7 @@
 package postgres
 
+// 動画カタログ・ダッシュボード集計（org_id でテナント分離）
+
 import (
 	"context"
 	"fmt"

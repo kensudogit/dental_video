@@ -1,3 +1,4 @@
+// Package service は GraphQL/HTTP から呼ばれるアプリケーション境界（ユースケース層）。
 package service
 
 import (
@@ -12,7 +13,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/store/postgres"
 )
 
-// Service is the application boundary for GraphQL and HTTP handlers.
+// Service は Postgres またはインメモリ、S3、OpenAI、リアルタイム Hub を束ねる。
 type Service struct {
 	Cfg    config.Config
 	Memory *store.Store
@@ -22,6 +23,7 @@ type Service struct {
 	Realtime *realtime.Hub
 }
 
+// New は DB 接続・マイグレーション・空 DB へのデモシードまで行う。
 func New(cfg config.Config) (*Service, error) {
 	svc := &Service{Cfg: cfg, OpenAI: openai.New(cfg), Realtime: realtime.New()}
 	var err error
@@ -55,6 +57,7 @@ func (s *Service) Close() {
 	}
 }
 
+// UsePostgres は本番データが Postgres かどうか（ステータス表示用）。
 func (s *Service) UsePostgres() bool {
 	return s.PG != nil
 }

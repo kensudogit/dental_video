@@ -1,3 +1,4 @@
+// Package storage はテナント別オブジェクトキーと S3 互換ストレージへのプリサインド PUT。
 package storage
 
 import (
@@ -13,12 +14,14 @@ import (
 	"github.com/pluszero/dental-video-api/internal/config"
 )
 
+// S3 はクリニック動画アップロード用（Railway / R2 / MinIO 等の S3 API）。
 type S3 struct {
 	client   *s3.Client
 	bucket   string
 	publicURL string
 }
 
+// New は S3 互換エンドポイントのクライアントを構築する（未設定時 nil）。
 func New(cfg config.Config) (*S3, error) {
 	if !cfg.S3Enabled() {
 		return nil, nil
@@ -50,6 +53,7 @@ func New(cfg config.Config) (*S3, error) {
 	return &S3{client: client, bucket: cfg.S3Bucket, publicURL: pub}, nil
 }
 
+// ObjectKey は tenants/{orgID}/... で他テナントとキー空間を分離する。
 func (s *S3) ObjectKey(orgID, folder, filename string) string {
 	safe := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' || r == '.' {

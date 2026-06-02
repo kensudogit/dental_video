@@ -1,5 +1,6 @@
 /**
- * API base URL for REST (auth). Browser always uses same origin so Next.js can proxy to Go.
+ * REST（認証）用 API ベース URL。
+ * ブラウザは常に同一オリジン（Next.js が Go へプロキシ）。
  */
 export function apiBase(): string {
   if (typeof window !== 'undefined') {

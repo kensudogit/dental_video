@@ -1,5 +1,7 @@
 package service
 
+// テナント ID・認証済み Principal の解決（マルチテナント SaaS の要）
+
 import (
 	"context"
 	"time"
@@ -15,6 +17,7 @@ const (
 	demoUserID = "user_demo"
 )
 
+// OrgID は JWT から組織 ID を得る。未ログイン時はデモ組織へフォールバック（カタログ閲覧用）。
 func (s *Service) OrgID(ctx context.Context) (string, error) {
 	if p, ok := tenant.PrincipalFrom(ctx); ok && p.OrgID != "" {
 		return p.OrgID, nil
@@ -29,6 +32,7 @@ func (s *Service) OrgID(ctx context.Context) (string, error) {
 	return "", tenant.ErrUnauthorized
 }
 
+// UserID は学習者 ID。未認証でも Postgres デモユーザーとして進捗 API を試せる。
 func (s *Service) UserID(ctx context.Context) (string, error) {
 	if p, ok := tenant.PrincipalFrom(ctx); ok && p.UserID != "" {
 		return p.UserID, nil
@@ -61,6 +65,7 @@ func (s *Service) APIKeyLookup(prefix, secret string) (tenant.Principal, bool) {
 	return tenant.Principal{UserID: uid, OrgID: oid, Role: role, Email: email, Name: name, AuthVia: "api_key"}, true
 }
 
+// Login は資格情報検証後に JWT 付き AuthPayload を返す。
 func (s *Service) Login(ctx context.Context, email, password string) (models.AuthPayload, error) {
 	if s.PG == nil {
 		return models.AuthPayload{}, tenant.ErrUnauthorized
@@ -76,6 +81,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (models.Aut
 	return models.AuthPayload{Token: token, Session: models.Session{User: u, Organization: org, Role: role}}, nil
 }
 
+// RegisterClinic は新規クリニックテナントとオーナーを作成し即ログイン可能にする。
 func (s *Service) RegisterClinic(ctx context.Context, in postgres.RegisterInput) (models.AuthPayload, error) {
 	if s.PG == nil {
 		return models.AuthPayload{}, tenant.ErrUnauthorized

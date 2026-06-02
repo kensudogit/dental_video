@@ -1,5 +1,7 @@
 package postgres
 
+// ログイン・クリニック新規登録・API キー認証
+
 import (
 	"context"
 	"errors"
@@ -12,8 +14,10 @@ import (
 	"github.com/pluszero/dental-video-api/internal/models"
 )
 
+// ErrInvalidCredentials はメール未登録・パスワード不一致をまとめて返す（情報漏えい防止）。
 var ErrInvalidCredentials = errors.New("invalid credentials")
 
+// Login は最初に参加した組織のロール付きでセッション情報を組み立てる。
 func (db *DB) Login(ctx context.Context, email, password string) (models.User, models.Organization, models.MemberRole, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	var u models.User
@@ -46,6 +50,7 @@ func (db *DB) Login(ctx context.Context, email, password string) (models.User, m
 	return u, org, role, nil
 }
 
+// RegisterInput は新規クリニック SaaS テナント作成時の入力。
 type RegisterInput struct {
 	ClinicName string
 	Slug       string
@@ -54,6 +59,7 @@ type RegisterInput struct {
 	Password   string
 }
 
+// RegisterClinic は組織・オーナー・利用カウンタを同一トランザクションで作成する。
 func (db *DB) RegisterClinic(ctx context.Context, in RegisterInput) (models.User, models.Organization, error) {
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Slug = strings.ToLower(strings.TrimSpace(in.Slug))

@@ -1,3 +1,4 @@
+// Package models はドメインエンティティ（動画・学習パス・進捗など）の型定義。
 package models
 
 import "time"

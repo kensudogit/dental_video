@@ -1,3 +1,6 @@
+/**
+ * サーバー側 API 接続診断（/status ページ・/api/status 共通）。
+ */
 import { isUnifiedDeploy, resolveApiUrl } from '@/lib/resolve-api-url'
 
 export type SetupStatus = {
@@ -66,6 +69,7 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
     error,
   }
 
+  // 統合デプロイでは 127.0.0.1 は正常（ブラウザは /graphql プロキシを使用）
   if (unified && apiUrl.includes('127.0.0.1')) {
     payload.apiUrlNote =
       'Unified deploy: API runs inside the same container. Browsers use /graphql and /auth on this site (not 127.0.0.1).'

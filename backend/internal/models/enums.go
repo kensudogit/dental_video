@@ -1,3 +1,4 @@
+// GraphQL と DB で共有する列挙型。
 package models
 
 type SkillLevel string

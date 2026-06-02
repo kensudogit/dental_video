@@ -1,5 +1,7 @@
 package postgres
 
+// 期間指定の KPI 集計と組織プロフィール更新
+
 import (
 	"context"
 	"time"

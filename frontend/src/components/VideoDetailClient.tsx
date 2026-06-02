@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * 動画詳細の学習操作: 視聴進捗・ブックマーク・タイムスタンプメモ。
+ */
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'
@@ -46,6 +49,7 @@ export function VideoDetailClient({
           input: {
             videoId,
             learnerId: DEMO_LEARNER_ID,
+            // 完了ボタン時は末尾位置 + completed=true
             positionSec: markComplete ? durationSec : position,
             completed: markComplete ?? completed,
           },

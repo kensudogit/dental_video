@@ -1,3 +1,4 @@
+/** 全ページ共通レイアウト（Noto Sans JP・AppShell・GraphQL プロバイダ）。 */
 import type { Metadata } from 'next'
 import { Noto_Sans_JP } from 'next/font/google'
 import { AppShell } from '@/components/AppShell'

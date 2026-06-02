@@ -1,5 +1,7 @@
 package graph
 
+// N+1 回避の DataLoader（講師参照のバッチ取得）
+
 import (
 	"context"
 	"net/http"
@@ -13,10 +15,12 @@ import (
 
 type loadersKey struct{}
 
+// Loaders はリクエストスコープで講師をまとめて読み込む。
 type Loaders struct {
 	InstructorByID *dataloader.Loader[string, *generated.Instructor]
 }
 
+// NewLoaders は 2ms 待ち合わせで同一リクエスト内の講師 ID をバッチする。
 func NewLoaders(svc *service.Service) *Loaders {
 	batch := func(ctx context.Context, keys []string) []*dataloader.Result[*generated.Instructor] {
 		results := make([]*dataloader.Result[*generated.Instructor], len(keys))

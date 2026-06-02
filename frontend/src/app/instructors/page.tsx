@@ -1,3 +1,4 @@
+/** 講師・監修者一覧。 */
 import { InstructorsPageDocument, type InstructorsPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'
 import { graphQLErrorHint } from '@/lib/graphql-errors'

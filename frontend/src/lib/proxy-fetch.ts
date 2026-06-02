@@ -1,4 +1,7 @@
-/** Server-side upstream fetch with timeout (auth/graphql proxies). */
+/**
+ * サーバー側プロキシ用 fetch（タイムアウト付き）。
+ * auth / graphql ルートから Go API へ転送する際に使用。
+ */
 export async function fetchUpstream(
   url: string,
   init: RequestInit = {},
@@ -10,6 +13,7 @@ export async function fetchUpstream(
   })
 }
 
+/** ログイン応答の Set-Cookie をブラウザへ中継 */
 function forwardSetCookies(upstream: Response, outHeaders: Headers) {
   const setCookies =
     typeof upstream.headers.getSetCookie === 'function'
@@ -22,7 +26,7 @@ function forwardSetCookies(upstream: Response, outHeaders: Headers) {
   }
 }
 
-/** Pass through the first upstream that responds (incl. 401/503 app errors). */
+/** 最初に応答した上流をそのまま返す（401 等のアプリエラーも含む） */
 export async function proxyUpstreamResponse(upstream: Response): Promise<Response> {
   const text = await upstream.text()
   const outHeaders = new Headers()
@@ -32,6 +36,7 @@ export async function proxyUpstreamResponse(upstream: Response): Promise<Respons
   return new Response(text, { status: upstream.status, headers: outHeaders })
 }
 
+/** 候補ベース URL を順に試し、接続失敗時のみ次へ */
 export async function proxyToApiBases(
   bases: string[],
   buildTarget: (base: string) => string,

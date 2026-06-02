@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * クリニックログイン（/auth/login へ POST、成功後は /settings へ遷移）。
+ */
 import Link from 'next/link'
 import { useState } from 'react'
 import { apiBase } from '@/lib/api-base'
@@ -19,6 +22,7 @@ export default function LoginPage() {
     setError(null)
     try {
       const res = await fetch(`${apiBase()}/auth/login`, {
+        // 同一オリジン → Next プロキシ → Go /auth/login
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -29,7 +33,7 @@ export default function LoginPage() {
         const j = await res.json().catch(() => ({}))
         throw new Error((j as { error?: string }).error ?? 'Login failed')
       }
-      // Full navigation avoids Apollo/router hangs after login.
+      // フルページ遷移で Apollo / Router のハングを回避
       window.location.assign('/settings')
     } catch (err) {
       if (err instanceof Error && err.name === 'TimeoutError') {

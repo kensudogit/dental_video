@@ -1,3 +1,4 @@
+// Package realtime は GraphQL サブスクリプション向けのプロセス内イベント Hub。
 package realtime
 
 import (
@@ -6,7 +7,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/graph/generated"
 )
 
-// Hub fans out GraphQL subscription events (in-process; scale-out via Redis later).
+// Hub は組織/学習者単位でダッシュボード・進捗・活動イベントを購読者へ配信する（将来 Redis 化想定）。
 type Hub struct {
 	mu sync.RWMutex
 
@@ -49,6 +50,7 @@ func (h *Hub) PublishDashboard(orgID string, stats *generated.DashboardStats) {
 	list := append([]chan *generated.DashboardStats(nil), h.dashboard[orgID]...)
 	h.mu.RUnlock()
 	for _, ch := range list {
+		// 遅い購読者はドロップ（UI は次回ポーリングで追いつく想定）
 		select {
 		case ch <- stats:
 		default:

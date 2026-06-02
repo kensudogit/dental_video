@@ -1,3 +1,4 @@
+/** 学習パス一覧（カリキュラム・修了証）。 */
 import Link from 'next/link'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { SkillBadge } from '@/components/SkillBadge'

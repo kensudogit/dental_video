@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * 理解度テストの回答フォームと採点結果表示。
+ */
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'

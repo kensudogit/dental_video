@@ -1,8 +1,8 @@
 /**
- * Go API base URL (no trailing slash).
+ * Go API ベース URL の解決（末尾スラッシュなし）。
  *
- * Unified deploy: UNIFIED_DEPLOY=1, API on 127.0.0.1:8081 in same container.
- * Two-service Railway: set API_URL on the Web service to the api public HTTPS URL.
+ * 統合デプロイ: UNIFIED_DEPLOY=1、同一コンテナ内 127.0.0.1:8081。
+ * 2 サービス Railway: Web サービスに API の公開 HTTPS URL を API_URL で設定。
  */
 
 function isRailway(): boolean {
@@ -26,6 +26,7 @@ export function readApiUrlFromEnv(): string | undefined {
   return undefined
 }
 
+/** Railway テンプレート ${{...}} が未展開のまま残っているか */
 export function isUnresolvedRailwayReference(value: string): boolean {
   return value.includes('${{')
 }
@@ -55,6 +56,7 @@ function isLocalhostApi(value: string): boolean {
   }
 }
 
+/** API_URL が Web 自身を指しているとループするため除外 */
 function pointsToThisWebService(url: string): boolean {
   const own = process.env.RAILWAY_PUBLIC_DOMAIN?.trim()
   if (!own) return false
@@ -106,6 +108,7 @@ function externalApiUrlFromEnv(): string | undefined {
   return normalized
 }
 
+/** サーバー側 fetch 用: 優先順に重複排除した候補 URL 一覧 */
 export function listApiBaseCandidates(): string[] {
   const seen = new Set<string>()
   const add = (raw: string) => {
@@ -125,6 +128,7 @@ export function listApiBaseCandidates(): string[] {
   if (explicit) {
     const normalized = normalizeApiUrl(explicit)
     if (normalized && !pointsToThisWebService(normalized)) {
+      // Railway 本番で localhost API_URL は無効（統合デプロイ時を除く）
       if (!(isRailway() && isLocalhostApi(normalized) && !isUnifiedDeploy())) {
         add(normalized)
       }
@@ -174,6 +178,7 @@ export function isProductionDeploy(): boolean {
   return process.env.NODE_ENV === 'production'
 }
 
+/** 接続失敗時 UI 向けの診断メッセージ（日本語/英語混在） */
 export function graphQLConnectionHint(): string {
   const raw = readApiUrlFromEnv()
   const target = resolveApiUrl()

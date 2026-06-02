@@ -1,5 +1,8 @@
 package main
 
+// dental-video-api の HTTP サーバエントリポイント。
+// 環境変数から設定を読み込み、サービス層を初期化して API を待ち受けする。
+
 import (
 	"log"
 	"net/http"

@@ -1,3 +1,4 @@
+// Package openai は歯科クリニック向け AI 相談・分析インサイト用の Chat Completions クライアント。
 package openai
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/config"
 )
 
+// Client は API キー未設定時は nil（service 層がフォールバック処理）。
 type Client struct {
 	apiKey string
 	model  string
@@ -87,10 +89,12 @@ func (c *Client) Chat(ctx context.Context, systemPrompt string, history []ChatMe
 	return out.Choices[0].Message.Content, nil
 }
 
+// DentalAnalyticsSystem は KPI JSON から経営向けインサイト JSON を生成させるシステムプロンプト。
 const DentalAnalyticsSystem = `You are a dental clinic management analyst (AI Board). Given JSON analytics KPIs for a learning platform, respond ONLY with valid JSON:
 {"summary":"...","strengths":["..."],"risks":["..."],"recommendations":["..."]}
 Write in Japanese. Focus on staff training ROI, completion rates, engagement, and actionable clinic management advice.`
 
+// DentalConsultSystem は日本の歯科医師向け臨床教育アシスタントの振る舞いを定義する。
 const DentalConsultSystem = `You are a clinical education assistant for licensed dental professionals in Japan.
 Provide evidence-informed, safety-conscious guidance for technique and case discussion.
 Do not diagnose specific patients without full records. Encourage supervision and institutional protocols.

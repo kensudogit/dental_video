@@ -1,5 +1,7 @@
 package postgres
 
+// ライブ配信セッションと症例ディスカッション掲示板
+
 import (
 	"context"
 	"time"

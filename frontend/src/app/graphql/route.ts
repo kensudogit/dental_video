@@ -1,3 +1,7 @@
+/**
+ * ブラウザからの GraphQL を Go API へプロキシする Route Handler。
+ * 同一オリジン /graphql で CORS・Cookie を維持する。
+ */
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
 import { proxyToApiBases } from '@/lib/proxy-fetch'
 
@@ -38,6 +42,7 @@ async function proxy(request: Request): Promise<Response> {
     },
   )
 
+  // 502 は GraphQL エラー形式に変換して返す
   if (res.status === 502) {
     const j = (await res.json()) as { error?: string }
     return Response.json(

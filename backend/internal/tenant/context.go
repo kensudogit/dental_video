@@ -1,3 +1,4 @@
+// Package tenant はリクエストごとの認証済み Principal（組織・ユーザー）を context に載せる。
 package tenant
 
 import "context"
@@ -6,6 +7,7 @@ type ctxKey int
 
 const principalKey ctxKey = 1
 
+// Principal はマルチテナント SaaS の現在操作主体。
 type Principal struct {
 	UserID string
 	OrgID  string

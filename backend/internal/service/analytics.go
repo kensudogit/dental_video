@@ -1,5 +1,7 @@
 package service
 
+// クリニック向け学習 KPI ボードと OpenAI による経営インサイト生成
+
 import (
 	"context"
 	"encoding/json"
@@ -37,6 +39,7 @@ func memoryAnalyticsBoard(s *Service) models.AnalyticsBoard {
 	}
 }
 
+// GenerateAnalyticsInsight は KPI JSON を LLM に渡し、失敗時はルールベースの日本語要約にフォールバックする。
 func (s *Service) GenerateAnalyticsInsight(ctx context.Context, periodDays int) (models.AnalyticsInsight, error) {
 	board, err := s.AnalyticsBoard(ctx, periodDays)
 	if err != nil {

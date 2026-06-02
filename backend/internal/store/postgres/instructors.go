@@ -1,5 +1,7 @@
 package postgres
 
+// 講師マスタ（動画数はサブクエリで集計）
+
 import (
 	"context"
 	"errors"

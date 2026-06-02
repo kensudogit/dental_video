@@ -1,5 +1,8 @@
 'use client'
 
+/**
+ * 学習パスへの受講登録ボタン（デモ学習者 ID 使用）。
+ */
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'

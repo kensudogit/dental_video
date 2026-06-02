@@ -1,5 +1,9 @@
 'use client'
 
+/**
+ * 組織設定（SaaS）: テナント情報・利用量・チームメンバー管理。
+ * セッション確認後に OrganizationSettings を取得する。
+ */
 import { useMutation, useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import {
@@ -19,7 +23,7 @@ export default function SettingsPage() {
   const session = sessionData?.currentSession
 
   const { data, loading, error, refetch } = useQuery(OrganizationSettingsDocument, {
-    skip: !session,
+    skip: !session, // 未ログイン時は org クエリを送らない
     fetchPolicy: 'network-only',
   })
   const [updateOrg, { loading: saving }] = useMutation(UpdateOrganizationDocument)
@@ -47,6 +51,7 @@ export default function SettingsPage() {
     return <p className="muted">Loading...</p>
   }
 
+  // 未ログイン・403 と API 接続失敗を分岐して表示
   const authRequired = !session || isAuthRequiredGraphQLError(error)
   const apiFailed = error && isNetworkGraphQLError(error)
 

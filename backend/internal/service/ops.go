@@ -1,5 +1,7 @@
 package service
 
+// 動画カタログ・学習パス・ライブ・症例・AI 相談などの業務オペレーション
+
 import (
 	"context"
 	"time"
@@ -233,6 +235,7 @@ func (s *Service) AddCasePost(ctx context.Context, discussionID, body string) (m
 	return s.PG.AddCasePost(ctx, oid, discussionID, uid, body)
 }
 
+// SendConsultation はユーザ発言を保存し OpenAI で歯科臨床教育アシスタント応答を生成する。
 func (s *Service) SendConsultation(ctx context.Context, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, error) {
 	if s.PG == nil || s.OpenAI == nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, tenant.ErrForbidden
@@ -245,6 +248,7 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 	if err != nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 	}
+	// 初回メッセージからスレッドタイトルを自動生成
 	if threadID == "" {
 		t, err := s.PG.CreateConsultThread(ctx, oid, uid, truncate(message, 40))
 		if err != nil {
@@ -261,6 +265,7 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 		return userMsg, models.ConsultationMessage{}, err
 	}
 	history := make([]openai.ChatMessage, 0, len(msgs))
+	// 直前のユーザ発言は userMessage 引数で渡すため履歴から除外
 	for _, m := range msgs {
 		if m.ID == userMsg.ID {
 			continue

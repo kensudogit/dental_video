@@ -1,3 +1,4 @@
+/** 動画ライブラリ一覧（カテゴリ・難易度・検索・ページング）。 */
 import Link from 'next/link'
 import { VideoCard } from '@/components/VideoCard'
 import {

@@ -1,3 +1,6 @@
+/**
+ * Go API 接続・PostgreSQL 設定状態の診断ページ（SSR）。
+ */
 import Link from 'next/link'
 import { fetchApiStatus } from '@/lib/status-check'
 import { ui } from '@/lib/ui'

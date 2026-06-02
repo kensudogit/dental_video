@@ -1,3 +1,4 @@
+// Package auth は JWT 発行・検証と HTTP 認証ミドルウェアを提供する。
 package auth
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Claims はクリニック SaaS のテナント境界（組織・ロール）を JWT に載せる。
 type Claims struct {
 	UserID string `json:"uid"`
 	OrgID  string `json:"oid"`
@@ -16,6 +18,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// IssueToken はログイン/登録成功時にフロントへ渡す Bearer/Cookie 用トークンを発行する。
 func IssueToken(secret string, ttl time.Duration, userID, orgID, role, email, name string) (string, error) {
 	now := time.Now()
 	claims := Claims{
@@ -34,6 +37,7 @@ func IssueToken(secret string, ttl time.Duration, userID, orgID, role, email, na
 	return t.SignedString([]byte(secret))
 }
 
+// ParseToken は HS256 署名付き JWT を検証しクレームを返す。
 func ParseToken(secret, token string) (Claims, error) {
 	var claims Claims
 	parsed, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (any, error) {

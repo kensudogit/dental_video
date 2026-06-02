@@ -1,5 +1,7 @@
 package api
 
+// クリニック向け SaaS のログイン・新規登録・Cookie セッション
+
 import (
 	"context"
 	"encoding/json"
@@ -12,10 +14,12 @@ import (
 	"github.com/pluszero/dental-video-api/internal/tenant"
 )
 
+// AuthHandler は JWT を Cookie に載せる従来型 REST 認証を担当する。
 type AuthHandler struct {
 	svc *service.Service
 }
 
+// Login はメール/パスワードで認証し、dv_token Cookie と JSON を返す。
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if !h.svc.UsePostgres() {
 		writeError(w, http.StatusServiceUnavailable, "postgresql not configured — set DATABASE_URL on Railway")
@@ -30,6 +34,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
+	// Railway 上の初回 DB 接続遅延でハングしないよう上限を設ける
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
 	payload, err := h.svc.Login(ctx, body.Email, body.Password)
@@ -50,6 +55,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"token": payload.Token, "session": payload.Session})
 }
 
+// Register は新規クリニック（組織）とオーナーアカウントを同時作成する。
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		ClinicName string `json:"clinicName"`
@@ -79,6 +85,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
+// cookieSecure はリバースプロキシ経由の HTTPS を考慮して Secure 属性を決める。
 func cookieSecure(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
@@ -86,6 +93,7 @@ func cookieSecure(r *http.Request) bool {
 	return r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
+// setTokenCookie はブラウザが GraphQL と共有できる HttpOnly セッションを設定する。
 func setTokenCookie(w http.ResponseWriter, r *http.Request, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "dv_token",
