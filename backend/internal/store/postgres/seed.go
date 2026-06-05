@@ -46,6 +46,9 @@ func ensureDemoCredentials(ctx context.Context, db *DB) error {
 			}
 		}
 	}
+	if err := ensureSaasDemoData(ctx, db); err != nil {
+		return err
+	}
 	return repairDemoTextEncoding(ctx, db)
 }
 
@@ -299,4 +302,59 @@ func seedDemo(ctx context.Context, db *DB) error {
 	}
 
 	return tx.Commit(ctx)
+}
+
+// ensureSaasDemoData seeds sample records for SaaS business modules on org_demo.
+func ensureSaasDemoData(ctx context.Context, db *DB) error {
+	const orgID = "org_demo"
+
+	_, err := db.Pool.Exec(ctx, `
+		INSERT INTO org_modules (org_id, module_code, enabled)
+		SELECT $1, code, TRUE FROM saas_modules
+		ON CONFLICT DO NOTHING`, orgID)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec(ctx, `
+		INSERT INTO dx_initiatives (id, org_id, title, description, status, progress_pct, owner_name, due_date)
+		VALUES ($1, $2, $3, $4, 'IN_PROGRESS', 35, $5, CURRENT_DATE + 30)
+		ON CONFLICT (id) DO NOTHING`,
+		"dx-1", orgID, "ペーパーレス受付", "タブレット受付と電子カルテ連携", "\u7530\u4e2d \u5065\u4e00")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec(ctx, `
+		INSERT INTO crm_contacts (id, org_id, name, email, phone, company, stage, notes)
+		VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE', $7)
+		ON CONFLICT (id) DO NOTHING`,
+		"crm-1", orgID, "\u5c71\u7530 \u82b1\u5b50", "hanako@example.com", "090-1234-5678",
+		"\u5c71\u7530\u69d8", "定期検診のリマインド希望")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec(ctx, `
+		INSERT INTO contract_templates (id, org_id, name, body)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (id) DO NOTHING`,
+		"ct-1", orgID, "\u6b3d\u4e0d\u958b\u793a\u540c\u610f\u66f8",
+		"\u672c\u9662\u306f\u60a3\u8005\u69d8\u306e\u533b\u7642\u60c5\u5831\u3092\u9069\u6cd5\u306b\u7ba1\u7406\u3057\u3001\u6b3d\u4e0d\u958b\u793a\u306b\u95a2\u3059\u308b\u6cd5\u4ee4\u306b\u5f93\u3044\u307e\u3059\u3002")
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Pool.Exec(ctx, `
+		INSERT INTO rag_documents (id, org_id, title, content, tags)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (id) DO NOTHING`,
+		"rag-1", orgID, "\u611f\u67d3\u5bfe\u7b56\u30de\u30cb\u30e5\u30a2\u30eb",
+		"\u624b\u6e17\u306f20\u79d2\u4ee5\u4e0a\u3001\u30a2\u30eb\u30b3\u30fc\u30eb\u6d88\u6bd2\u306f\u30c9\u30a2\u30ce\u30d6\u3068\u30b9\u30a4\u30c3\u30c1\u3092\u4f7f\u7528\u3002\u624b\u888b\u306f\u4e00\u56de\u306e\u305f\u3081\u306e\u4f7f\u7528\u3092\u539f\u5247\u3068\u3059\u308b\u3002",
+		[]string{"感染対策", "院内規程"})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

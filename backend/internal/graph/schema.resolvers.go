@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"time"
 
 	"github.com/pluszero/dental-video-api/internal/gqlconv"
 	"github.com/pluszero/dental-video-api/internal/graph/generated"
@@ -18,7 +19,11 @@ func (r *mutationResolver) UpdateOrganization(ctx context.Context, input generat
 	if err != nil {
 		return nil, err
 	}
-	return gqlconv.ToOrganization(o), nil
+	mods, err := r.svc.ListSaasModules(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToOrganizationWithModules(o, mods), nil
 }
 
 // GenerateAnalyticsInsight is the resolver for the generateAnalyticsInsight field.
@@ -105,6 +110,155 @@ func (r *mutationResolver) SubmitQuizAttempt(ctx context.Context, input generate
 	return gqlconv.ToAttempt(attempt), nil
 }
 
+// CreateDxInitiative is the resolver for the createDxInitiative field.
+func (r *mutationResolver) CreateDxInitiative(ctx context.Context, input generated.CreateDxInitiativeInput) (*generated.DxInitiative, error) {
+	item, err := r.svc.CreateDxInitiative(ctx, gqlconv.DxInitiativeFromInput(input))
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToDxInitiative(item), nil
+}
+
+// CreateCrmContact is the resolver for the createCrmContact field.
+func (r *mutationResolver) CreateCrmContact(ctx context.Context, input generated.CreateCrmContactInput) (*generated.CrmContact, error) {
+	item, err := r.svc.CreateCrmContact(ctx, gqlconv.CrmContactFromInput(input))
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToCrmContact(item), nil
+}
+
+// CreateCrmInteraction is the resolver for the createCrmInteraction field.
+func (r *mutationResolver) CreateCrmInteraction(ctx context.Context, contactID string, kind string, summary string) (*generated.CrmInteraction, error) {
+	item, err := r.svc.CreateCrmInteraction(ctx, contactID, kind, summary)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToCrmInteraction(item), nil
+}
+
+// ClockIn is the resolver for the clockIn field.
+func (r *mutationResolver) ClockIn(ctx context.Context, note *string) (*generated.AttendanceRecord, error) {
+	n := ""
+	if note != nil {
+		n = *note
+	}
+	item, err := r.svc.ClockIn(ctx, n)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToAttendanceRecord(item), nil
+}
+
+// ClockOut is the resolver for the clockOut field.
+func (r *mutationResolver) ClockOut(ctx context.Context) (*generated.AttendanceRecord, error) {
+	item, err := r.svc.ClockOut(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToAttendanceRecord(item), nil
+}
+
+// CreateLeaveRequest is the resolver for the createLeaveRequest field.
+func (r *mutationResolver) CreateLeaveRequest(ctx context.Context, input generated.CreateLeaveRequestInput) (*generated.LeaveRequest, error) {
+	start, err := time.Parse("2006-01-02", input.StartDate)
+	if err != nil {
+		return nil, err
+	}
+	end, err := time.Parse("2006-01-02", input.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	reason := ""
+	if input.Reason != nil {
+		reason = *input.Reason
+	}
+	item, err := r.svc.CreateLeaveRequest(ctx, start, end, reason)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToLeaveRequest(item), nil
+}
+
+// ApproveLeaveRequest is the resolver for the approveLeaveRequest field.
+func (r *mutationResolver) ApproveLeaveRequest(ctx context.Context, id string) (*generated.LeaveRequest, error) {
+	item, err := r.svc.ApproveLeaveRequest(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToLeaveRequest(item), nil
+}
+
+// CreateContractTemplate is the resolver for the createContractTemplate field.
+func (r *mutationResolver) CreateContractTemplate(ctx context.Context, name string, body string) (*generated.ContractTemplate, error) {
+	item, err := r.svc.CreateContractTemplate(ctx, name, body)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToContractTemplate(item), nil
+}
+
+// CreateContract is the resolver for the createContract field.
+func (r *mutationResolver) CreateContract(ctx context.Context, input generated.CreateContractInput) (*generated.Contract, error) {
+	templateID := ""
+	if input.TemplateID != nil {
+		templateID = *input.TemplateID
+	}
+	body := ""
+	if input.Body != nil {
+		body = *input.Body
+	}
+	partyEmail := ""
+	if input.PartyEmail != nil {
+		partyEmail = *input.PartyEmail
+	}
+	item, err := r.svc.CreateContract(ctx, templateID, input.Title, input.PartyName, partyEmail, body)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToContract(item), nil
+}
+
+// SignContract is the resolver for the signContract field.
+func (r *mutationResolver) SignContract(ctx context.Context, id string) (*generated.Contract, error) {
+	item, err := r.svc.SignContract(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToContract(item), nil
+}
+
+// SendConsultMessage is the resolver for the sendConsultMessage field.
+func (r *mutationResolver) SendConsultMessage(ctx context.Context, threadID *string, message string) (*generated.ConsultMessageReply, error) {
+	tid := ""
+	if threadID != nil {
+		tid = *threadID
+	}
+	reply, err := r.svc.SendConsultationModule(ctx, tid, message)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToConsultMessageReply(reply), nil
+}
+
+// CreateRagDocument is the resolver for the createRagDocument field.
+func (r *mutationResolver) CreateRagDocument(ctx context.Context, input generated.CreateRagDocumentInput) (*generated.RagDocument, error) {
+	item, err := r.svc.CreateRagDocument(ctx, gqlconv.RagDocumentFromInput(input))
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToRagDocument(item), nil
+}
+
+// SetSaasModuleEnabled is the resolver for the setSaasModuleEnabled field.
+func (r *mutationResolver) SetSaasModuleEnabled(ctx context.Context, code generated.SaasModuleCode, enabled bool) (*generated.SaasModule, error) {
+	item, err := r.svc.SetSaasModuleEnabled(ctx, models.SaasModuleCode(code), enabled)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToSaasModule(item), nil
+}
+
 // Health is the resolver for the health field.
 func (r *queryResolver) Health(ctx context.Context) (*generated.Health, error) {
 	return gqlconv.ToHealth(), nil
@@ -125,7 +279,11 @@ func (r *queryResolver) CurrentSession(ctx context.Context) (*generated.Session,
 	if err != nil || sess == nil {
 		return nil, err
 	}
-	return gqlconv.ToSession(*sess), nil
+	mods, err := r.svc.ListSaasModules(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToSessionWithModules(*sess, mods), nil
 }
 
 // Organization is the resolver for the organization field.
@@ -134,7 +292,11 @@ func (r *queryResolver) Organization(ctx context.Context) (*generated.Organizati
 	if err != nil {
 		return nil, err
 	}
-	return gqlconv.ToOrganization(o), nil
+	mods, err := r.svc.ListSaasModules(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToOrganizationWithModules(o, mods), nil
 }
 
 // UsageSummary is the resolver for the usageSummary field.
@@ -346,6 +508,163 @@ func (r *queryResolver) MyCertificates(ctx context.Context, learnerID string) ([
 		out[i] = gqlconv.ToCertificate(c)
 	}
 	return out, nil
+}
+
+// SaasModules is the resolver for the saasModules field.
+func (r *queryResolver) SaasModules(ctx context.Context) ([]*generated.SaasModule, error) {
+	list, err := r.svc.ListSaasModules(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToSaasModules(list), nil
+}
+
+// DxInitiatives is the resolver for the dxInitiatives field.
+func (r *queryResolver) DxInitiatives(ctx context.Context) ([]*generated.DxInitiative, error) {
+	list, err := r.svc.ListDxInitiatives(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.DxInitiative, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToDxInitiative(item)
+	}
+	return out, nil
+}
+
+// CrmContacts is the resolver for the crmContacts field.
+func (r *queryResolver) CrmContacts(ctx context.Context) ([]*generated.CrmContact, error) {
+	list, err := r.svc.ListCrmContacts(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.CrmContact, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToCrmContact(item)
+	}
+	return out, nil
+}
+
+// CrmInteractions is the resolver for the crmInteractions field.
+func (r *queryResolver) CrmInteractions(ctx context.Context, contactID string) ([]*generated.CrmInteraction, error) {
+	list, err := r.svc.ListCrmInteractions(ctx, contactID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.CrmInteraction, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToCrmInteraction(item)
+	}
+	return out, nil
+}
+
+// AttendanceRecords is the resolver for the attendanceRecords field.
+func (r *queryResolver) AttendanceRecords(ctx context.Context) ([]*generated.AttendanceRecord, error) {
+	list, err := r.svc.ListAttendanceRecords(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.AttendanceRecord, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToAttendanceRecord(item)
+	}
+	return out, nil
+}
+
+// LeaveRequests is the resolver for the leaveRequests field.
+func (r *queryResolver) LeaveRequests(ctx context.Context) ([]*generated.LeaveRequest, error) {
+	list, err := r.svc.ListLeaveRequests(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.LeaveRequest, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToLeaveRequest(item)
+	}
+	return out, nil
+}
+
+// ContractTemplates is the resolver for the contractTemplates field.
+func (r *queryResolver) ContractTemplates(ctx context.Context) ([]*generated.ContractTemplate, error) {
+	list, err := r.svc.ListContractTemplates(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.ContractTemplate, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToContractTemplate(item)
+	}
+	return out, nil
+}
+
+// Contracts is the resolver for the contracts field.
+func (r *queryResolver) Contracts(ctx context.Context) ([]*generated.Contract, error) {
+	list, err := r.svc.ListContracts(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.Contract, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToContract(item)
+	}
+	return out, nil
+}
+
+// ConsultThreads is the resolver for the consultThreads field.
+func (r *queryResolver) ConsultThreads(ctx context.Context) ([]*generated.ConsultThread, error) {
+	list, err := r.svc.ListConsultThreadsModule(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.ConsultThread, len(list))
+	for i, t := range list {
+		out[i] = gqlconv.ToConsultThread(t, nil)
+	}
+	return out, nil
+}
+
+// ConsultThread is the resolver for the consultThread field.
+func (r *queryResolver) ConsultThread(ctx context.Context, id string) (*generated.ConsultThread, error) {
+	t, msgs, err := r.svc.GetConsultThreadModule(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToConsultThread(t, msgs), nil
+}
+
+// RagDocuments is the resolver for the ragDocuments field.
+func (r *queryResolver) RagDocuments(ctx context.Context) ([]*generated.RagDocument, error) {
+	list, err := r.svc.ListRagDocuments(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*generated.RagDocument, len(list))
+	for i, item := range list {
+		out[i] = gqlconv.ToRagDocument(item)
+	}
+	return out, nil
+}
+
+// RagSearch is the resolver for the ragSearch field.
+func (r *queryResolver) RagSearch(ctx context.Context, query string, limit *int) ([]*generated.RagSearchHit, error) {
+	n := 5
+	if limit != nil {
+		n = *limit
+	}
+	hits, err := r.svc.SearchRagDocuments(ctx, query, n)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToRagSearchHits(hits), nil
+}
+
+// RagAnswer is the resolver for the ragAnswer field.
+func (r *queryResolver) RagAnswer(ctx context.Context, query string) (*generated.RagAnswer, error) {
+	answer, hits, err := r.svc.RagAnswer(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToRagAnswer(answer, hits), nil
 }
 
 // DashboardUpdated is the resolver for the dashboardUpdated field.

@@ -9,6 +9,7 @@ import Link from 'next/link'
 import {
   CurrentSessionDocument,
   OrganizationSettingsDocument,
+  SaasModulesDocument,
   UpdateOrganizationDocument,
 } from '@/lib/generated/graphql'
 import { isAuthRequiredGraphQLError, isNetworkGraphQLError } from '@/lib/graphql-errors'
@@ -24,6 +25,10 @@ export default function SettingsPage() {
 
   const { data, loading, error, refetch } = useQuery(OrganizationSettingsDocument, {
     skip: !session, // 未ログイン時は org クエリを送らない
+    fetchPolicy: 'network-only',
+  })
+  const { data: saasData } = useQuery(SaasModulesDocument, {
+    skip: !session,
     fetchPolicy: 'network-only',
   })
   const [updateOrg, { loading: saving }] = useMutation(UpdateOrganizationDocument)
@@ -138,6 +143,25 @@ export default function SettingsPage() {
                   {usage.apiCallsThisMonth} / {usage.apiCallsLimit}
                 </div>
               </div>
+            </section>
+          ) : null}
+
+          {saasData?.saasModules?.length ? (
+            <section className="panel" style={{ marginTop: '1rem' }}>
+              <h3>{ui.saasModulesTitle}</h3>
+              <ul className="metric-list">
+                {saasData.saasModules.map((m) => (
+                  <li key={m.code}>
+                    <span>
+                      {m.name} — {m.enabled ? ui.saasEnabled : ui.saasDisabled}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="muted small">{ui.saasToggleHint}</p>
+              <Link href="/saas" className="btn outline" style={{ marginTop: '0.75rem' }}>
+                {ui.navSaas}
+              </Link>
             </section>
           ) : null}
 

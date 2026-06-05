@@ -98,6 +98,12 @@ func (db *DB) RegisterClinic(ctx context.Context, in RegisterInput) (models.User
 	if err != nil {
 		return models.User{}, models.Organization{}, err
 	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO org_modules (org_id, module_code, enabled)
+		SELECT $1, code, TRUE FROM saas_modules`, orgID)
+	if err != nil {
+		return models.User{}, models.Organization{}, err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return models.User{}, models.Organization{}, err
 	}

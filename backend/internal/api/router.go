@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/pluszero/dental-video-api/internal/auth"
 	"github.com/pluszero/dental-video-api/internal/graph"
 	"github.com/pluszero/dental-video-api/internal/service"
 )
@@ -47,6 +48,12 @@ func NewRouter(svc *service.Service) http.Handler {
 	if err := graph.RegisterRoutes(r, svc); err != nil {
 		log.Fatalf("graphql: %v", err)
 	}
+
+	saasH := &SaasHandler{svc: svc}
+	r.Route("/api/saas", func(r chi.Router) {
+		r.Use(auth.Middleware(svc.Cfg.JWTSecret, svc.APIKeyLookup))
+		saasH.Routes(r)
+	})
 
 	return r
 }

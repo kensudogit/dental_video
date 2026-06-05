@@ -13,6 +13,7 @@ import { UsageGuidePanel } from '@/components/UsageGuidePanel'
 const nav = [
   { href: '/', label: ui.navHome, short: ui.navHome },
   { href: '/board', label: ui.navBoard, short: ui.navBoard },
+  { href: '/saas', label: ui.navSaas, short: 'SaaS' },
   { href: '/videos', label: ui.navVideos, short: ui.navVideos },
   { href: '/paths', label: ui.navPaths, short: ui.navPaths },
   { href: '/learning', label: ui.navLearning, short: ui.navLearning },

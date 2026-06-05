@@ -34,6 +34,15 @@ type AnalyticsKpi struct {
 	TrendPct *float64 `json:"trendPct,omitempty"`
 }
 
+type AttendanceRecord struct {
+	ID       string  `json:"id"`
+	UserID   string  `json:"userId"`
+	UserName string  `json:"userName"`
+	ClockIn  string  `json:"clockIn"`
+	ClockOut *string `json:"clockOut,omitempty"`
+	Note     string  `json:"note"`
+}
+
 type Bookmark struct {
 	ID        string `json:"id"`
 	VideoID   string `json:"videoId"`
@@ -54,11 +63,107 @@ type Certificate struct {
 	IssuedAt  string `json:"issuedAt"`
 }
 
+type ConsultMessage struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type ConsultMessageReply struct {
+	ThreadID         string          `json:"threadId"`
+	UserMessage      *ConsultMessage `json:"userMessage"`
+	AssistantMessage *ConsultMessage `json:"assistantMessage"`
+}
+
+type ConsultThread struct {
+	ID        string            `json:"id"`
+	Title     string            `json:"title"`
+	CreatedAt string            `json:"createdAt"`
+	Messages  []*ConsultMessage `json:"messages"`
+}
+
+type Contract struct {
+	ID         string  `json:"id"`
+	TemplateID *string `json:"templateId,omitempty"`
+	Title      string  `json:"title"`
+	PartyName  string  `json:"partyName"`
+	PartyEmail string  `json:"partyEmail"`
+	Body       string  `json:"body"`
+	Status     string  `json:"status"`
+	CreatedAt  string  `json:"createdAt"`
+	SignedAt   *string `json:"signedAt,omitempty"`
+}
+
+type ContractTemplate struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Body      string `json:"body"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type CreateContractInput struct {
+	TemplateID *string `json:"templateId,omitempty"`
+	Title      string  `json:"title"`
+	PartyName  string  `json:"partyName"`
+	PartyEmail *string `json:"partyEmail,omitempty"`
+	Body       *string `json:"body,omitempty"`
+}
+
+type CreateCrmContactInput struct {
+	Name    string  `json:"name"`
+	Email   *string `json:"email,omitempty"`
+	Phone   *string `json:"phone,omitempty"`
+	Company *string `json:"company,omitempty"`
+	Stage   *string `json:"stage,omitempty"`
+	Notes   *string `json:"notes,omitempty"`
+}
+
+type CreateDxInitiativeInput struct {
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
+	Status      *string `json:"status,omitempty"`
+	ProgressPct *int    `json:"progressPct,omitempty"`
+	OwnerName   *string `json:"ownerName,omitempty"`
+	DueDate     *string `json:"dueDate,omitempty"`
+}
+
+type CreateLeaveRequestInput struct {
+	StartDate string  `json:"startDate"`
+	EndDate   string  `json:"endDate"`
+	Reason    *string `json:"reason,omitempty"`
+}
+
+type CreateRagDocumentInput struct {
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags,omitempty"`
+}
+
 type CreateVideoNoteInput struct {
 	VideoID      string `json:"videoId"`
 	LearnerID    string `json:"learnerId"`
 	TimestampSec int    `json:"timestampSec"`
 	Body         string `json:"body"`
+}
+
+type CrmContact struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Company   string `json:"company"`
+	Stage     string `json:"stage"`
+	Notes     string `json:"notes"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type CrmInteraction struct {
+	ID         string `json:"id"`
+	ContactID  string `json:"contactId"`
+	Kind       string `json:"kind"`
+	Summary    string `json:"summary"`
+	OccurredAt string `json:"occurredAt"`
 }
 
 type DashboardStats struct {
@@ -68,6 +173,19 @@ type DashboardStats struct {
 	CompletionsThisMonth int     `json:"completionsThisMonth"`
 	WatchHoursThisMonth  float64 `json:"watchHoursThisMonth"`
 	ActiveLearners       int     `json:"activeLearners"`
+}
+
+type DxInitiative struct {
+	ID          string  `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	Status      string  `json:"status"`
+	ProgressPct int     `json:"progressPct"`
+	OwnerName   string  `json:"ownerName"`
+	DueDate     *string `json:"dueDate,omitempty"`
+	TaskCount   int     `json:"taskCount"`
+	TasksDone   int     `json:"tasksDone"`
+	CreatedAt   string  `json:"createdAt"`
 }
 
 type Health struct {
@@ -108,6 +226,17 @@ type LearningPath struct {
 	CertificateTitle string               `json:"certificateTitle"`
 }
 
+type LeaveRequest struct {
+	ID        string `json:"id"`
+	UserID    string `json:"userId"`
+	UserName  string `json:"userName"`
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+	Reason    string `json:"reason"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
+}
+
 type Mutation struct {
 }
 
@@ -121,6 +250,7 @@ type Organization struct {
 	Timezone           string             `json:"timezone"`
 	MemberCount        int                `json:"memberCount"`
 	CreatedAt          string             `json:"createdAt"`
+	EnabledModules     []*SaasModule      `json:"enabledModules"`
 }
 
 type PageInfo struct {
@@ -160,6 +290,33 @@ type QuizQuestion struct {
 	Prompt       string        `json:"prompt"`
 	Choices      []*QuizChoice `json:"choices"`
 	CorrectIndex int           `json:"correctIndex"`
+}
+
+type RagAnswer struct {
+	Answer  string          `json:"answer"`
+	Sources []*RagSearchHit `json:"sources"`
+}
+
+type RagDocument struct {
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	Content   string   `json:"content"`
+	Tags      []string `json:"tags"`
+	CreatedAt string   `json:"createdAt"`
+}
+
+type RagSearchHit struct {
+	DocumentID string  `json:"documentId"`
+	Title      string  `json:"title"`
+	Snippet    string  `json:"snippet"`
+	Score      float64 `json:"score"`
+}
+
+type SaasModule struct {
+	Code        SaasModuleCode `json:"code"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Enabled     bool           `json:"enabled"`
 }
 
 type Session struct {
@@ -351,6 +508,55 @@ func (e *PlanTier) UnmarshalGQL(v any) error {
 }
 
 func (e PlanTier) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type SaasModuleCode string
+
+const (
+	SaasModuleCodeDx         SaasModuleCode = "DX"
+	SaasModuleCodeCrm        SaasModuleCode = "CRM"
+	SaasModuleCodeAttendance SaasModuleCode = "ATTENDANCE"
+	SaasModuleCodeEcontract  SaasModuleCode = "ECONTRACT"
+	SaasModuleCodeChatbot    SaasModuleCode = "CHATBOT"
+	SaasModuleCodeDocRag     SaasModuleCode = "DOC_RAG"
+)
+
+var AllSaasModuleCode = []SaasModuleCode{
+	SaasModuleCodeDx,
+	SaasModuleCodeCrm,
+	SaasModuleCodeAttendance,
+	SaasModuleCodeEcontract,
+	SaasModuleCodeChatbot,
+	SaasModuleCodeDocRag,
+}
+
+func (e SaasModuleCode) IsValid() bool {
+	switch e {
+	case SaasModuleCodeDx, SaasModuleCodeCrm, SaasModuleCodeAttendance, SaasModuleCodeEcontract, SaasModuleCodeChatbot, SaasModuleCodeDocRag:
+		return true
+	}
+	return false
+}
+
+func (e SaasModuleCode) String() string {
+	return string(e)
+}
+
+func (e *SaasModuleCode) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SaasModuleCode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SaasModuleCode", str)
+	}
+	return nil
+}
+
+func (e SaasModuleCode) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

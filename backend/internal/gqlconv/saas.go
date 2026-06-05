@@ -20,13 +20,26 @@ func ToOrganization(o models.Organization) *generated.Organization {
 		ID: o.ID, Name: o.Name, Slug: o.Slug,
 		PlanTier: generated.PlanTier(o.PlanTier), SubscriptionStatus: generated.SubscriptionStatus(o.SubscriptionStatus),
 		SeatCount: o.SeatCount, Timezone: o.Timezone, MemberCount: o.MemberCount,
-		CreatedAt: fmtTime(o.CreatedAt),
+		CreatedAt: fmtTime(o.CreatedAt), EnabledModules: []*generated.SaasModule{},
 	}
+}
+
+func ToOrganizationWithModules(o models.Organization, modules []models.SaasModule) *generated.Organization {
+	org := ToOrganization(o)
+	org.EnabledModules = ToEnabledSaasModules(modules)
+	return org
 }
 
 func ToSession(s models.Session) *generated.Session {
 	return &generated.Session{
 		User: ToUser(s.User), Organization: ToOrganization(s.Organization), Role: generated.MemberRole(s.Role),
+	}
+}
+
+func ToSessionWithModules(s models.Session, modules []models.SaasModule) *generated.Session {
+	return &generated.Session{
+		User: ToUser(s.User), Organization: ToOrganizationWithModules(s.Organization, modules),
+		Role: generated.MemberRole(s.Role),
 	}
 }
 
