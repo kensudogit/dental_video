@@ -44,7 +44,7 @@ func (db *DB) IsModuleEnabled(ctx context.Context, orgID string, code models.Saa
 func (db *DB) EnsureOrgModules(ctx context.Context, orgID string) error {
 	_, err := db.Pool.Exec(ctx, `
 		INSERT INTO org_modules (org_id, module_code, enabled)
-		SELECT $1, code, TRUE FROM saas_modules
+		SELECT $1, code, CASE WHEN code = 'DOC_RAG' THEN FALSE ELSE TRUE END FROM saas_modules
 		ON CONFLICT DO NOTHING`, orgID)
 	return err
 }

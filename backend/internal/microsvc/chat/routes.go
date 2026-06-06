@@ -11,6 +11,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/store/postgres"
+	"github.com/pluszero/dental-video-api/internal/textutil"
 )
 
 func Register(d *runtime.Deps) {
@@ -74,7 +75,7 @@ func (h *handler) sendMessage(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) consult(ctx context.Context, oid, uid, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, string, error) {
 	if threadID == "" {
-		t, err := h.db.CreateConsultThread(ctx, oid, uid, truncate(message, 40))
+		t, err := h.db.CreateConsultThread(ctx, oid, uid, textutil.TruncateRunes(message, 40))
 		if err != nil {
 			return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
 		}
@@ -95,18 +96,16 @@ func (h *handler) consult(ctx context.Context, oid, uid, threadID, message strin
 		}
 		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
 	}
-	reply, err := h.ai.Chat(ctx, openai.DentalConsultSystem, history, message)
-	if err != nil {
-		return userMsg, models.ConsultationMessage{}, threadID, err
+	reply := consultFallbackReply
+	if h.ai != nil {
+		answer, err := h.ai.Chat(ctx, openai.DentalConsultSystem, history, message)
+		if err == nil && answer != "" {
+			reply = answer
+		}
 	}
 	aiMsg, err := h.db.AddConsultMessage(ctx, oid, threadID, "assistant", reply)
 	_ = h.db.IncrementConsultUsage(ctx, oid, len(message)+len(reply))
 	return userMsg, aiMsg, threadID, err
 }
 
-func truncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n] + "..."
-}
+const consultFallbackReply = "（デモ応答）ご質問を受け付けました。OpenAI 連携が有効になると、歯科臨床・運営に関する詳細な回答を生成できます。"

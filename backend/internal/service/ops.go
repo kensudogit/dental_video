@@ -9,6 +9,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/tenant"
+	"github.com/pluszero/dental-video-api/internal/textutil"
 )
 
 func (s *Service) Dashboard(ctx context.Context) (models.DashboardStats, error) {
@@ -254,12 +255,14 @@ func (s *Service) AddCasePost(ctx context.Context, discussionID, body string) (m
 	return s.PG.AddCasePost(ctx, oid, discussionID, uid, body)
 }
 
+const consultFallbackReply = "（デモ応答）ご質問を受け付けました。OpenAI 連携が有効になると、歯科臨床・運営に関する詳細な回答を生成できます。"
+
 // SendConsultation はユーザ発言を保存し OpenAI で歯科臨床教育アシスタント応答を生成する。
 func (s *Service) SendConsultation(ctx context.Context, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, error) {
 	if s.memoryMode() {
 		return s.memorySendConsultation(ctx, threadID, message)
 	}
-	if s.PG == nil || s.OpenAI == nil {
+	if s.PG == nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, tenant.ErrForbidden
 	}
 	oid, err := s.OrgID(ctx)
@@ -272,7 +275,7 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 	}
 	// 初回メッセージからスレッドタイトルを自動生成
 	if threadID == "" {
-		t, err := s.PG.CreateConsultThread(ctx, oid, uid, truncate(message, 40))
+		t, err := s.PG.CreateConsultThread(ctx, oid, uid, textutil.TruncateRunes(message, 40))
 		if err != nil {
 			return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 		}
@@ -294,20 +297,16 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 		}
 		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
 	}
-	reply, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, history, message)
-	if err != nil {
-		return userMsg, models.ConsultationMessage{}, err
+	reply := consultFallbackReply
+	if s.OpenAI != nil && s.Cfg.OpenAIEnabled() {
+		answer, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, history, message)
+		if err == nil && answer != "" {
+			reply = answer
+		}
 	}
 	aiMsg, err := s.PG.AddConsultMessage(ctx, oid, threadID, "assistant", reply)
 	_ = s.PG.IncrementConsultUsage(ctx, oid, len(message)+len(reply))
 	return userMsg, aiMsg, err
-}
-
-func truncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n] + "..."
 }
 
 func (s *Service) ListConsultThreads(ctx context.Context) ([]models.ConsultationThread, error) {

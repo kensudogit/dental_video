@@ -100,7 +100,7 @@ func (db *DB) RegisterClinic(ctx context.Context, in RegisterInput) (models.User
 	}
 	_, err = tx.Exec(ctx, `
 		INSERT INTO org_modules (org_id, module_code, enabled)
-		SELECT $1, code, TRUE FROM saas_modules`, orgID)
+		SELECT $1, code, CASE WHEN code = 'DOC_RAG' THEN FALSE ELSE TRUE END FROM saas_modules`, orgID)
 	if err != nil {
 		return models.User{}, models.Organization{}, err
 	}

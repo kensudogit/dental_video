@@ -310,7 +310,7 @@ func ensureSaasDemoData(ctx context.Context, db *DB) error {
 
 	_, err := db.Pool.Exec(ctx, `
 		INSERT INTO org_modules (org_id, module_code, enabled)
-		SELECT $1, code, TRUE FROM saas_modules
+		SELECT $1, code, CASE WHEN code = 'DOC_RAG' THEN FALSE ELSE TRUE END FROM saas_modules
 		ON CONFLICT DO NOTHING`, orgID)
 	if err != nil {
 		return err

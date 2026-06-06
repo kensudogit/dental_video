@@ -9,6 +9,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/tenant"
+	"github.com/pluszero/dental-video-api/internal/textutil"
 )
 
 type memoryConsultStore struct {
@@ -72,10 +73,7 @@ func (s *Service) memorySendConsultation(ctx context.Context, threadID, message 
 	if threadID == "" {
 		store.seq++
 		threadID = fmt.Sprintf("mem-thread-%d", store.seq)
-		title := message
-		if len(title) > 40 {
-			title = title[:40]
-		}
+		title := textutil.TruncateRunes(message, 40)
 		store.threads[threadID] = models.ConsultationThread{
 			ID: threadID, OrgID: p.OrgID, UserID: p.UserID, Title: title, CreatedAt: now,
 		}
