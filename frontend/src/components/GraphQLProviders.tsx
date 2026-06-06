@@ -14,6 +14,7 @@ const defaultRuntime: GraphqlRuntimeContextValue = {
   graphqlWsUrl: '',
   apiBase: '',
   unified: false,
+  localDev: false,
   subscriptionReady: false,
 }
 
@@ -48,6 +49,7 @@ export function GraphQLProviders({ children }: { children: React.ReactNode }) {
     graphqlWsUrl: runtime?.graphqlWsUrl ?? '',
     apiBase: runtime?.apiBase ?? '',
     unified: runtime?.unified ?? false,
+    localDev: runtime?.localDev ?? false,
     subscriptionReady: urqlClient != null,
   }
 

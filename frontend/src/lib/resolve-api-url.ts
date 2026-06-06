@@ -5,7 +5,7 @@
  * 2 サービス Railway: Web サービスに API の公開 HTTPS URL を API_URL で設定。
  */
 
-function isRailway(): boolean {
+export function isRailway(): boolean {
   return Boolean(
     process.env.RAILWAY_ENVIRONMENT ||
       process.env.RAILWAY_PROJECT_ID ||
@@ -14,7 +14,9 @@ function isRailway(): boolean {
 }
 
 export function isUnifiedDeploy(): boolean {
-  return process.env.UNIFIED_DEPLOY === '1' || process.env.UNIFIED_DEPLOY === 'true'
+  return (
+    (process.env.UNIFIED_DEPLOY === '1' || process.env.UNIFIED_DEPLOY === 'true') && isRailway()
+  )
 }
 
 export function readApiUrlFromEnv(): string | undefined {

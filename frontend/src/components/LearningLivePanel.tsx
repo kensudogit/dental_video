@@ -96,7 +96,7 @@ function LivePanelBody() {
       : ui.liveActive
 
   const wsTarget = runtime.graphqlWsUrl || runtime.apiBase || 'Gateway'
-  const offlineHint = ui.liveOfflineHint(wsTarget, runtime.unified)
+  const offlineHint = ui.liveOfflineHint(wsTarget, runtime.localDev)
 
   return (
     <section className="live-panel" aria-live="polite">
