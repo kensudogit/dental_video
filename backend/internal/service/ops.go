@@ -6,6 +6,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/pluszero/dental-video-api/internal/consult"
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/tenant"
@@ -255,8 +256,6 @@ func (s *Service) AddCasePost(ctx context.Context, discussionID, body string) (m
 	return s.PG.AddCasePost(ctx, oid, discussionID, uid, body)
 }
 
-const consultFallbackReply = "（デモ応答）ご質問を受け付けました。OpenAI 連携が有効になると、歯科臨床・運営に関する詳細な回答を生成できます。"
-
 // SendConsultation はユーザ発言を保存し OpenAI で歯科臨床教育アシスタント応答を生成する。
 func (s *Service) SendConsultation(ctx context.Context, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, error) {
 	if s.memoryMode() {
@@ -297,13 +296,7 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 		}
 		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
 	}
-	reply := consultFallbackReply
-	if s.OpenAI != nil && s.Cfg.OpenAIEnabled() {
-		answer, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, history, message)
-		if err == nil && answer != "" {
-			reply = answer
-		}
-	}
+	reply := consult.GenerateReply(ctx, s.Cfg, s.OpenAI, history, message)
 	aiMsg, err := s.PG.AddConsultMessage(ctx, oid, threadID, "assistant", reply)
 	_ = s.PG.IncrementConsultUsage(ctx, oid, len(message)+len(reply))
 	return userMsg, aiMsg, err

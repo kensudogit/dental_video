@@ -46,6 +46,12 @@ export default async function StatusPage() {
               <code>{s.postgres ? 'connected' : 'not configured'}</code>
             </li>
           ) : null}
+          {typeof s.openai === 'boolean' ? (
+            <li>
+              <span>OpenAI</span>
+              <code>{s.openai ? 'configured' : 'not configured'}</code>
+            </li>
+          ) : null}
         </ul>
         {s.postgres === false ? (
           <div className="alert" style={{ marginTop: '0.75rem' }}>
@@ -77,6 +83,14 @@ export default async function StatusPage() {
                 {s.setup.jwtSecretWarning}
               </p>
             ) : null}
+          </div>
+        ) : null}
+        {s.ok && s.postgres && s.openai === false ? (
+          <div className="alert muted" style={{ marginTop: '0.75rem' }}>
+            <p>
+              AI チャットボット / AI Board 用に <code>OPENAI_API_KEY</code> を Railway Variables に設定してください（
+              <code>{s.setup?.openaiApiKey ?? 'unknown'}</code>）。
+            </p>
           </div>
         ) : null}
         {s.error ? <p className="alert">{s.error}</p> : null}

@@ -627,6 +627,18 @@ function ContractsModuleView() {
 function ChatModuleView() {
   const [input, setInput] = useState('')
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [openaiReady, setOpenaiReady] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    void fetch('/api/status', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { openai?: boolean } | null) => {
+        if (data && typeof data.openai === 'boolean') {
+          setOpenaiReady(data.openai)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const { data: threadsData, loading: threadsLoading, error: threadsError, refetch: refetchThreads } = useQuery(
     ConsultThreadsDocument,
@@ -669,6 +681,12 @@ function ChatModuleView() {
   return (
     <>
       {err && <p className="alert">{err}</p>}
+      {openaiReady === false ? (
+        <p className="alert muted">
+          {ui.saasChatOpenaiHint}{' '}
+          <Link href="/status">/status</Link>
+        </p>
+      ) : null}
       <section className="saas-panel">
         <div className="saas-chat-layout">
           <aside className="saas-chat-threads">

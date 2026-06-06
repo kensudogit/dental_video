@@ -24,6 +24,7 @@ export type StatusPayload = {
   graphqlProxy: string
   unified: boolean
   postgres?: boolean
+  openai?: boolean
   setup?: SetupStatus
   health: { ok?: boolean; service?: string; version?: string }
   error?: string
@@ -36,6 +37,7 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
   let health: StatusPayload['health'] = {}
   let apiReachable = false
   let postgres: boolean | undefined
+  let openai: boolean | undefined
   let setup: SetupStatus | undefined
   let error: string | undefined
 
@@ -48,9 +50,11 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
     if (statusRes.ok) {
       const statusJson = (await statusRes.json()) as {
         postgres?: boolean
+        openai?: boolean
         setup?: SetupStatus
       }
       postgres = statusJson.postgres
+      openai = statusJson.openai
       setup = statusJson.setup
     }
   } catch (e) {
@@ -64,6 +68,7 @@ export async function fetchApiStatus(): Promise<StatusPayload> {
     graphqlProxy: '/graphql',
     unified,
     postgres,
+    openai,
     setup,
     health,
     error,

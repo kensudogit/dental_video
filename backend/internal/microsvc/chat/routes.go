@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/pluszero/dental-video-api/internal/config"
+	"github.com/pluszero/dental-video-api/internal/consult"
 	"github.com/pluszero/dental-video-api/internal/microsvc/base"
 	"github.com/pluszero/dental-video-api/internal/microsvc/runtime"
 	"github.com/pluszero/dental-video-api/internal/models"
@@ -15,15 +17,16 @@ import (
 )
 
 func Register(d *runtime.Deps) {
-	h := &handler{db: d.DB, ai: d.OpenAI}
+	h := &handler{cfg: d.Cfg, db: d.DB, ai: d.OpenAI}
 	d.Router.Get("/threads", h.listThreads)
 	d.Router.Get("/threads/{id}", h.getThread)
 	d.Router.Post("/messages", h.sendMessage)
 }
 
 type handler struct {
-	db *postgres.DB
-	ai *openai.Client
+	cfg config.Config
+	db  *postgres.DB
+	ai  *openai.Client
 }
 
 func (h *handler) listThreads(w http.ResponseWriter, r *http.Request) {
@@ -96,16 +99,8 @@ func (h *handler) consult(ctx context.Context, oid, uid, threadID, message strin
 		}
 		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
 	}
-	reply := consultFallbackReply
-	if h.ai != nil {
-		answer, err := h.ai.Chat(ctx, openai.DentalConsultSystem, history, message)
-		if err == nil && answer != "" {
-			reply = answer
-		}
-	}
+	reply := consult.GenerateReply(ctx, h.cfg, h.ai, history, message)
 	aiMsg, err := h.db.AddConsultMessage(ctx, oid, threadID, "assistant", reply)
 	_ = h.db.IncrementConsultUsage(ctx, oid, len(message)+len(reply))
 	return userMsg, aiMsg, threadID, err
 }
-
-const consultFallbackReply = "（デモ応答）ご質問を受け付けました。OpenAI 連携が有効になると、歯科臨床・運営に関する詳細な回答を生成できます。"

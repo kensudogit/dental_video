@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pluszero/dental-video-api/internal/consult"
 	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/tenant"
@@ -95,22 +96,16 @@ func (s *Service) memorySendConsultation(ctx context.Context, threadID, message 
 	}
 	store.messages[threadID] = append(store.messages[threadID], userMsg)
 
-	reply := "（デモモード）ご質問を受け付けました。本番では OpenAI 連携または PostgreSQL 保存が有効になります。"
-	if s.OpenAI != nil && s.Cfg.OpenAIEnabled() {
-		history := make([]openai.ChatMessage, 0, len(store.messages[threadID]))
-		for _, m := range store.messages[threadID] {
-			if m.ID == userMsg.ID {
-				continue
-			}
-			history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
+	history := make([]openai.ChatMessage, 0, len(store.messages[threadID]))
+	for _, m := range store.messages[threadID] {
+		if m.ID == userMsg.ID {
+			continue
 		}
-		store.mu.Unlock()
-		answer, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, history, message)
-		store.mu.Lock()
-		if err == nil && answer != "" {
-			reply = answer
-		}
+		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
 	}
+	store.mu.Unlock()
+	reply := consult.GenerateReply(ctx, s.Cfg, s.OpenAI, history, message)
+	store.mu.Lock()
 
 	store.seq++
 	aiMsg := models.ConsultationMessage{

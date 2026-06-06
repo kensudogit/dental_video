@@ -45,6 +45,7 @@ echo "[unified] DATABASE_URL=${DATABASE_URL:+set}${DATABASE_URL:-empty}"
 echo "[unified] DATABASE_PRIVATE_URL=${DATABASE_PRIVATE_URL:+set}${DATABASE_PRIVATE_URL:-empty}"
 echo "[unified] PGHOST=${PGHOST:+set}${PGHOST:-empty}"
 echo "[unified] JWT_SECRET=${JWT_SECRET:+set}${JWT_SECRET:-empty}"
+echo "[unified] OPENAI_API_KEY=${OPENAI_API_KEY:+set}${OPENAI_API_KEY:-empty}"
 if [ -z "${DATABASE_URL:-}" ] && [ -z "${DATABASE_PRIVATE_URL:-}" ] && [ -z "${PGHOST:-}" ]; then
   echo "[unified] ERROR: DATABASE_URL is required"
   echo "[unified]   dental_video service ? Variables ? + New Variable ? Reference ? Postgres ? DATABASE_URL"
