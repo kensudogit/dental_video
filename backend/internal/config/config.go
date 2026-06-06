@@ -28,6 +28,13 @@ type Config struct {
 	AllowedOrigins    []string
 	AppPublicURL      string
 	EnableMemoryStore bool
+	// SaaS microservice base URLs (gateway proxies GraphQL/REST when set).
+	SaasDxURL         string
+	SaasCrmURL        string
+	SaasAttendanceURL string
+	SaasContractURL   string
+	SaasChatURL       string
+	SaasRagURL        string
 }
 
 // Load は環境変数から Config を構築する（DB 未設定時はメモリストアへフォールバック可）。
@@ -84,7 +91,21 @@ func Load() Config {
 		AllowedOrigins:    origins,
 		AppPublicURL:      strings.TrimRight(strings.TrimSpace(envOr("APP_PUBLIC_URL", "http://localhost:3000")), "/"),
 		EnableMemoryStore: enableMemory,
+		SaasDxURL:         envOr("SAAS_DX_URL", "http://127.0.0.1:8081"),
+		SaasCrmURL:        envOr("SAAS_CRM_URL", "http://127.0.0.1:8082"),
+		SaasAttendanceURL: envOr("SAAS_ATTENDANCE_URL", "http://127.0.0.1:8083"),
+		SaasContractURL:   envOr("SAAS_CONTRACT_URL", "http://127.0.0.1:8084"),
+		SaasChatURL:       envOr("SAAS_CHAT_URL", "http://127.0.0.1:8085"),
+		SaasRagURL:        envOr("SAAS_RAG_URL", "http://127.0.0.1:8086"),
 	}
+}
+
+// MicroservicesEnabled is true when SaaS traffic should go to separate services (default on).
+func (c Config) MicroservicesEnabled() bool {
+	if os.Getenv("SAAS_MONOLITH") == "true" {
+		return false
+	}
+	return true
 }
 
 // S3Enabled は動画プリサインドアップロードが利用可能か。

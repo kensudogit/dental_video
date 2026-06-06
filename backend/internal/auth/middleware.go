@@ -55,6 +55,7 @@ func Middleware(secret string, lookup APIKeyLookup) func(http.Handler) http.Hand
 					}
 				}
 			}
+			ctx = tenant.WithForwardAuth(ctx, r.Header.Get("Authorization"), r.Header.Get("Cookie"), r.Header.Get("X-API-Key"))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

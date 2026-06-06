@@ -2,11 +2,12 @@
 
 /**
  * 画面右下のドラッグ可能な利用手順パネル（localStorage で位置・開閉を保存）。
+ * アーキテクチャ概要・運用手順をデモ／ポートフォリオ向けに表示する。
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const STORAGE_KEY = 'dental-video-usage-guide-v7'
-const PANEL_WIDTH = 380
+const STORAGE_KEY = 'dental-video-usage-guide-v8'
+const PANEL_WIDTH = 420
 
 type GuideStep = {
   title: string
@@ -14,109 +15,161 @@ type GuideStep = {
   items?: readonly string[]
 }
 
-const orgSettingsGuide = {
-  title: 'Organization settings (SaaS) / 組織設定',
-  body: '/settings でクリニック（テナント）の管理画面。PostgreSQL 接続 + ログインが必要です。',
+type FeaturedBlock = {
+  badge: string
+  title: string
+  body: string
+  items?: readonly string[]
+  variant?: 'architecture' | 'saas' | 'default'
+}
+
+const architectureFeatured: FeaturedBlock = {
+  badge: 'Architecture',
+  title: 'BFF + 6 SaaS Microservices',
+  body:
+    'Next.js は Gateway のみに接続。認証・学習・GraphQL BFF は Gateway (:8080)、SaaS 業務は独立プロセス (:8081–8086) に分離。テナント分離は org_id + JWT 転送で一貫。',
+  variant: 'architecture',
   items: [
-    '左メニュー「組織設定」または /settings',
-    'デモ: demo@sakura-dental.jp / demo1234',
-    '【編集可】クリニック名・slug・席数・タイムゾーン → Save',
-    '【参照のみ】プラン・契約状態・メンバー数',
-    '【利用量】Members / Videos / API（今月）の上限対比',
-    '【Team】メンバー一覧（OWNER / ADMIN / MEMBER / VIEWER）',
-    'テナント分離: ログイン org の org_id でデータを分離',
+    'Gateway — 認証 / 組織 / 学習 / GraphQL / org_modules ON-OFF',
+    'saas-dx :8081 · saas-crm :8082 · saas-attendance :8083',
+    'saas-contract :8084 · saas-chat :8085 · saas-rag :8086',
+    'GraphQL SDL が API 契約の Single Source of Truth',
+    'SAAS_MONOLITH=true でモノリスフォールバック（開発用）',
   ],
-} as const
+}
+
+const saasFeatured: FeaturedBlock = {
+  badge: 'SaaS',
+  title: 'モジュール型マルチテナント',
+  body: '/saas で 6 モジュールを ON/OFF。有効化された機能だけ GraphQL 経由で各マイクロサービスへ委譲されます。',
+  variant: 'saas',
+  items: [
+    'DX 施策 · CRM · 勤怠 · 電子契約 · 相談チャット · 文書 RAG',
+    'OWNER / ADMIN のみモジュール切替（SetSaasModuleEnabled）',
+    'デモ: demo@sakura-dental.jp / demo1234 → /saas',
+    '組織設定 /settings — プラン・利用量・Team ロール',
+  ],
+}
+
+const techStack = [
+  'GraphQL · gqlgen',
+  'Go 1.25 · chi',
+  'Next.js 15 · Apollo',
+  'PostgreSQL',
+  'JWT · org_id',
+  'Docker Compose',
+] as const
+
+const archDiagram = `Next.js :3000
+    │ GraphQL / REST
+    ▼
+Gateway (BFF) :8080 ── org_modules
+    ├─ saas-dx        :8081
+    ├─ saas-crm       :8082
+    ├─ saas-attendance:8083
+    ├─ saas-contract  :8084
+    ├─ saas-chat      :8085
+    └─ saas-rag       :8086
+         │ shared PostgreSQL + JWT_SECRET`
 
 const L = {
   title: '利用手順',
+  subtitle: 'Architecture & Ops',
   dragHint: 'ドラッグで移動',
   expand: '開く',
   collapse: '閉じる',
-  scrollHint: '↓ スクロールでデプロイ・開発手順も表示されます',
-  orgSettingsLabel: 'SaaS',
+  heroTitle: '歯科医療技術向上プラットフォーム',
+  heroLead:
+    'マルチテナント SaaS × 動画学習 × AI Board。設計判断が追えるデモ構成です。',
+  stackLabel: 'Tech stack',
+  diagramLabel: 'Service topology',
+  scrollHint: '↓ デプロイ・開発・機能別の手順は下へ',
   footer:
-    '▼▲ で開閉、ヘッダーをドラッグして好きな位置に移動できます。表示位置は自動保存されます。',
+    '▼▲ で開閉 · ヘッダーをドラッグして移動 · 表示位置は自動保存されます。',
   steps: [
     {
       title: '1. 接続確認（最初に）',
-      body: '本番・ローカル共通。エラー時は /status の PostgreSQL と JWT を確認します。',
+      body: '本番・ローカル共通。障害切り分けの起点です。',
       items: [
-        '/health → Web 生存確認（Railway ヘルスチェック）',
-        '/status → PostgreSQL: connected / API 接続 OK',
-        '左下メニュー「API 接続確認」からも同じ内容を確認',
+        '/health — Web / Gateway 生存確認',
+        '/status — PostgreSQL connected · JWT 設定の有無',
+        '左下「API 接続確認」から同内容を確認',
+        '各マイクロサービス: GET /health → ok + service 名',
       ],
     },
     {
-      title: '2. Railway 本番デプロイ',
-      body: 'Go API + Next.js を 1 サービスで公開。詳細は docs/RAILWAY.md。',
-      items: [
-        'GitHub: kensudogit/dental_video → Root 空欄 + /railway.toml',
-        'PostgreSQL 追加 → dental_video Variables → DATABASE_URL = Reference → Postgres → DATABASE_URL',
-        'JWT_SECRET = ランダム文字列（API キー不可）・OPENAI_API_KEY = 任意',
-        'API_URL は設定しない（統合デプロイ）',
-        'Redeploy → /status OK → /login',
-      ],
-    },
-    {
-      title: '3. デモログイン',
-      body: 'PostgreSQL 接続時はクリニック（テナント）単位でデータが分離されます。',
+      title: '2. デモログイン & テナント',
+      body: 'PostgreSQL 接続時は org_id でデータ完全分離。フロントは Gateway のみを知ります。',
       items: [
         '/login → demo@sakura-dental.jp / demo1234',
-        'ログイン後 JWT クッキー (dv_token) が発行され GraphQL がテナント別に',
-        '組織管理の詳細 → 上部「Organization settings (SaaS) / 組織設定」',
+        'JWT Cookie (dv_token) → GraphQL Authorization',
+        'Gateway が JWT を各 SaaS サービスへヘッダ転送',
       ],
     },
     {
-      title: '4. 組織設定 (Organization settings · SaaS)',
-      body: orgSettingsGuide.body,
-      items: [...orgSettingsGuide.items],
+      title: '3. SaaS ハブ & モジュール',
+      body: '業務モジュールはプラガブル。無効モジュールは UI / API 双方でガード。',
+      items: [
+        '/saas — 6 モジュールの ON/OFF と各機能画面へ',
+        '/saas/dx · /crm · /attendance · /contracts · /chat · /rag',
+        'GraphQL: saasModules · setSaasModuleEnabled',
+      ],
     },
     {
-      title: '5. Docker ローカル（推奨）',
-      body: 'PostgreSQL + MinIO + API + Web を一括起動。SaaS・AI Board の確認に最適。',
+      title: '4. Docker ローカル（推奨）',
+      body: 'PostgreSQL + MinIO + Gateway + 6 マイクロサービス + Web を一括起動。',
       items: [
-        'cp .env.example .env → OPENAI_API_KEY を設定（AI Board 用）',
+        'cp .env.example .env → OPENAI_API_KEY（AI Board / Chat / RAG）',
         'npm run docker:up',
         'Web http://localhost:3000 · GraphiQL http://localhost:8080/graphiql',
+        'Gateway env: SAAS_DX_URL … SAAS_RAG_URL（compose 内 DNS）',
         '停止: npm run docker:down',
       ],
     },
     {
-      title: '6. npm ローカル開発',
-      body: 'DATABASE_URL 未設定時はメモリストア。設定すれば PostgreSQL に切り替わります。',
+      title: '5. npm ローカル開発',
+      body: 'Gateway と 6 サービスを concurrently で起動。DB 未設定時はメモリストア（学習のみ）。',
       items: [
         'npm run install:all → cd backend; go mod tidy',
-        'npm run dev（API :8080 + Web :3000）',
+        'npm run dev — gw + dx + crm + att + ctr + chat + rag + web',
+        'npm run dev:monolith — SAAS_MONOLITH=true で Gateway のみ',
         'npm run codegen（schema 変更後）',
       ],
     },
     {
-      title: '7. 学習コンテンツ',
-      body: '動画・学習パス・テスト・マイ学習で段階的に習得します。',
+      title: '6. 学習コンテンツ（Gateway 内）',
+      body: '動画・パス・テストは Gateway モノリス領域。SaaS とはプロセス分離。',
       items: [
-        '動画ライブラリ → 分野・難易度・キーワードで検索',
-        '学習パス → カリキュラム順に視聴・修了証',
-        '理解度テスト → 動画視聴後の確認',
-        'マイ学習 → 進捗・ブックマーク・修了証一覧',
+        '動画ライブラリ — 分野・難易度・キーワード検索',
+        '学習パス — カリキュラム順 · 修了証',
+        '理解度テスト · マイ学習（進捗・ブックマーク）',
       ],
     },
     {
-      title: '8. AI Board',
-      body: '学習 KPI を集約し、OpenAI で経営インサイトを生成します。',
+      title: '7. AI Board',
+      body: '学習 KPI 集約 + OpenAI 経営インサイト（Gateway 内）。',
       items: [
-        '/board → 期間を選んで KPI 確認',
-        '「AI 経営インサイト生成」→ 強み・リスク・提案',
+        '/board — 期間 KPI → AI 経営インサイト生成',
         'OPENAI_API_KEY 未設定時はルールベース表示',
       ],
     },
     {
-      title: '9. 開発者向け',
-      body: 'gqlgen + Codegen + Apollo + urql（Subscription）構成。',
+      title: '8. Railway 本番',
+      body: '統合デプロイ（Gateway + Web）または将来マイクロサービス個別デプロイ。詳細 docs/RAILWAY.md。',
       items: [
-        'GraphiQL: http://localhost:8080/graphiql',
-        '本番 GraphQL: /graphql（同一オリジン）',
-        'SSR: gqlRequest · クライアント: @apollo/client/react',
+        'GitHub + /railway.toml · DATABASE_URL Reference · JWT_SECRET',
+        'OPENAI_API_KEY · CORS_ORIGINS · APP_PUBLIC_URL',
+        'API_URL は統合デプロイでは不要',
+        'Redeploy → /status OK → /login',
+      ],
+    },
+    {
+      title: '9. 開発者向け GraphQL',
+      body: 'Schema-first · Codegen · Apollo Client + urql Subscription。',
+      items: [
+        'graphql/schema.graphql → go generate · npm run codegen',
+        'GraphiQL http://localhost:8080/graphiql',
+        '本番 /graphql · Subscription は WS',
       ],
     },
   ] satisfies readonly GuideStep[],
@@ -131,7 +184,7 @@ type SavedState = {
 function defaultPosition() {
   if (typeof window === 'undefined') return { x: 24, y: 24 }
   const x = Math.max(16, window.innerWidth - PANEL_WIDTH - 24)
-  const y = Math.max(72, window.innerHeight - 440)
+  const y = Math.max(72, window.innerHeight - 480)
   return { x, y }
 }
 
@@ -142,6 +195,29 @@ function clampPosition(x: number, y: number, width: number, height: number) {
     x: Math.min(Math.max(8, x), maxX),
     y: Math.min(Math.max(8, y), maxY),
   }
+}
+
+function FeaturedSection({ block }: { block: FeaturedBlock }) {
+  const variant = block.variant ?? 'default'
+  return (
+    <section
+      className={`usage-guide-featured usage-guide-featured--${variant}`}
+      aria-label={block.title}
+    >
+      <div className="usage-guide-featured-head">
+        <span className="usage-guide-featured-badge">{block.badge}</span>
+        <strong>{block.title}</strong>
+      </div>
+      <p>{block.body}</p>
+      {block.items?.length ? (
+        <ul className="usage-guide-items">
+          {block.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  )
 }
 
 export function UsageGuidePanel() {
@@ -159,7 +235,6 @@ export function UsageGuidePanel() {
   const [pos, setPos] = useState({ x: 24, y: 24 })
   const [dragging, setDragging] = useState(false)
 
-  // 初回マウント時に保存済み位置を復元（SSR 不一致回避のため ready まで非表示）
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -196,7 +271,6 @@ export function UsageGuidePanel() {
   const onHeaderPointerDown = useCallback(
     (e: React.PointerEvent<HTMLElement>) => {
       if ((e.target as HTMLElement).closest('.usage-guide-toggle')) return
-      // 開閉ボタン上ではドラッグ開始しない
       dragRef.current = {
         pointerId: e.pointerId,
         startX: e.clientX,
@@ -256,7 +330,10 @@ export function UsageGuidePanel() {
           <span className="usage-guide-drag-icon" aria-hidden>
             ☰
           </span>
-          <strong>{L.title}</strong>
+          <div className="usage-guide-header-titles">
+            <strong>{L.title}</strong>
+            <span className="usage-guide-header-sub">{L.subtitle}</span>
+          </div>
           <span className="usage-guide-drag-hint">{L.dragHint}</span>
         </div>
         <button
@@ -272,18 +349,28 @@ export function UsageGuidePanel() {
 
       {expanded ? (
         <div className="usage-guide-body">
-          <section className="usage-guide-featured" aria-label={orgSettingsGuide.title}>
-            <div className="usage-guide-featured-head">
-              <span className="usage-guide-featured-badge">{L.orgSettingsLabel}</span>
-              <strong>{orgSettingsGuide.title}</strong>
-            </div>
-            <p>{orgSettingsGuide.body}</p>
-            <ul className="usage-guide-items">
-              {orgSettingsGuide.items.map((item) => (
-                <li key={item}>{item}</li>
+          <div className="usage-guide-hero">
+            <p className="usage-guide-hero-kicker">Portfolio-ready demo</p>
+            <h2 className="usage-guide-hero-title">{L.heroTitle}</h2>
+            <p className="usage-guide-hero-lead">{L.heroLead}</p>
+            <div className="usage-guide-stack" aria-label={L.stackLabel}>
+              {techStack.map((tag) => (
+                <span key={tag} className="usage-guide-stack-pill">
+                  {tag}
+                </span>
               ))}
-            </ul>
-          </section>
+            </div>
+          </div>
+
+          <FeaturedSection block={architectureFeatured} />
+
+          <figure className="usage-guide-diagram" aria-label={L.diagramLabel}>
+            <figcaption>{L.diagramLabel}</figcaption>
+            <pre>{archDiagram}</pre>
+          </figure>
+
+          <FeaturedSection block={saasFeatured} />
+
           <p className="usage-guide-scroll-hint">{L.scrollHint}</p>
           <ol className="usage-guide-steps">
             {L.steps.map((step) => (

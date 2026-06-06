@@ -1,6 +1,10 @@
-# Local full stack: PostgreSQL + MinIO + Go API + Next.js
+# Local full stack: PostgreSQL + MinIO + Gateway + 6 SaaS microservices + Next.js
 # Usage: docker compose up --build
-# Web http://localhost:3000  API http://localhost:8080/graphql  GraphiQL http://localhost:8080/graphiql
+# Web http://localhost:3000  Gateway http://localhost:8080/graphql
+
+x-saas-env: &saas-env
+  DATABASE_URL: postgres://dental:dental@db:5432/dental_video?sslmode=disable
+  JWT_SECRET: dev-docker-change-me
 
 services:
   db:
@@ -43,6 +47,88 @@ services:
       exit 0;
       "
 
+  saas-dx:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-dx
+    environment:
+      <<: *saas-env
+      PORT: "8081"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  saas-crm:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-crm
+    environment:
+      <<: *saas-env
+      PORT: "8082"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  saas-attendance:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-attendance
+    environment:
+      <<: *saas-env
+      PORT: "8083"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  saas-contract:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-contract
+    environment:
+      <<: *saas-env
+      PORT: "8084"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  saas-chat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-chat
+    environment:
+      <<: *saas-env
+      PORT: "8085"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  saas-rag:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.micro
+      args:
+        SERVICE: saas-rag
+    environment:
+      <<: *saas-env
+      PORT: "8086"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+    depends_on:
+      db:
+        condition: service_healthy
+
   api:
     build:
       context: ./backend
@@ -64,11 +150,29 @@ services:
       S3_PUBLIC_BASE_URL: http://localhost:9000/dental-video
       CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
       APP_PUBLIC_URL: http://localhost:3000
+      SAAS_DX_URL: http://saas-dx:8081
+      SAAS_CRM_URL: http://saas-crm:8082
+      SAAS_ATTENDANCE_URL: http://saas-attendance:8083
+      SAAS_CONTRACT_URL: http://saas-contract:8084
+      SAAS_CHAT_URL: http://saas-chat:8085
+      SAAS_RAG_URL: http://saas-rag:8086
     depends_on:
       db:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      saas-dx:
+        condition: service_started
+      saas-crm:
+        condition: service_started
+      saas-attendance:
+        condition: service_started
+      saas-contract:
+        condition: service_started
+      saas-chat:
+        condition: service_started
+      saas-rag:
+        condition: service_started
 
   web:
     build:

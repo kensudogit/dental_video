@@ -8,6 +8,7 @@ import (
 	"github.com/pluszero/dental-video-api/internal/config"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/realtime"
+	"github.com/pluszero/dental-video-api/internal/saasremote"
 	"github.com/pluszero/dental-video-api/internal/storage"
 	"github.com/pluszero/dental-video-api/internal/store"
 	"github.com/pluszero/dental-video-api/internal/store/postgres"
@@ -21,6 +22,7 @@ type Service struct {
 	S3       *storage.S3
 	OpenAI   *openai.Client
 	Realtime *realtime.Hub
+	SaaSRemote *saasremote.Client
 }
 
 // New は DB 接続・マイグレーション・空 DB へのデモシードまで行う。
@@ -47,6 +49,9 @@ func New(cfg config.Config) (*Service, error) {
 	}
 	if err := svc.PG.SeedIfEmpty(context.Background()); err != nil {
 		return nil, err
+	}
+	if cfg.MicroservicesEnabled() {
+		svc.SaaSRemote = saasremote.New(cfg)
 	}
 	return svc, nil
 }

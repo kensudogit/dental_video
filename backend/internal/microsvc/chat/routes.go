@@ -1,0 +1,112 @@
+package chat
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/pluszero/dental-video-api/internal/microsvc/base"
+	"github.com/pluszero/dental-video-api/internal/microsvc/runtime"
+	"github.com/pluszero/dental-video-api/internal/models"
+	"github.com/pluszero/dental-video-api/internal/openai"
+	"github.com/pluszero/dental-video-api/internal/store/postgres"
+)
+
+func Register(d *runtime.Deps) {
+	h := &handler{db: d.DB, ai: d.OpenAI}
+	d.Router.Get("/threads", h.listThreads)
+	d.Router.Get("/threads/{id}", h.getThread)
+	d.Router.Post("/messages", h.sendMessage)
+}
+
+type handler struct {
+	db *postgres.DB
+	ai *openai.Client
+}
+
+func (h *handler) listThreads(w http.ResponseWriter, r *http.Request) {
+	p, err := base.RequireAuth(r.Context())
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	list, err := h.db.ListConsultThreads(r.Context(), p.OrgID, p.UserID)
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	base.WriteJSON(w, http.StatusOK, map[string]any{"threads": list})
+}
+
+func (h *handler) getThread(w http.ResponseWriter, r *http.Request) {
+	p, err := base.RequireAuth(r.Context())
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	id := chi.URLParam(r, "id")
+	thread, msgs, err := h.db.GetConsultThread(r.Context(), p.OrgID, id)
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	base.WriteJSON(w, http.StatusOK, map[string]any{"thread": thread, "messages": msgs})
+}
+
+func (h *handler) sendMessage(w http.ResponseWriter, r *http.Request) {
+	p, err := base.RequireAuth(r.Context())
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	var body struct {
+		ThreadID string `json:"threadId"`
+		Message  string `json:"message"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		base.WriteError(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+	userMsg, aiMsg, threadID, err := h.consult(r.Context(), p.OrgID, p.UserID, body.ThreadID, body.Message)
+	if base.WriteSvcErr(w, err) {
+		return
+	}
+	base.WriteJSON(w, http.StatusOK, models.ConsultMessageReply{
+		ThreadID: threadID, UserMessage: userMsg, AssistantMessage: aiMsg,
+	})
+}
+
+func (h *handler) consult(ctx context.Context, oid, uid, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, string, error) {
+	if threadID == "" {
+		t, err := h.db.CreateConsultThread(ctx, oid, uid, truncate(message, 40))
+		if err != nil {
+			return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
+		}
+		threadID = t.ID
+	}
+	userMsg, err := h.db.AddConsultMessage(ctx, oid, threadID, "user", message)
+	if err != nil {
+		return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
+	}
+	_, msgs, err := h.db.GetConsultThread(ctx, oid, threadID)
+	if err != nil {
+		return userMsg, models.ConsultationMessage{}, threadID, err
+	}
+	history := make([]openai.ChatMessage, 0, len(msgs))
+	for _, m := range msgs {
+		if m.ID == userMsg.ID {
+			continue
+		}
+		history = append(history, openai.ChatMessage{Role: m.Role, Content: m.Content})
+	}
+	reply, err := h.ai.Chat(ctx, openai.DentalConsultSystem, history, message)
+	if err != nil {
+		return userMsg, models.ConsultationMessage{}, threadID, err
+	}
+	aiMsg, err := h.db.AddConsultMessage(ctx, oid, threadID, "assistant", reply)
+	_ = h.db.IncrementConsultUsage(ctx, oid, len(message)+len(reply))
+	return userMsg, aiMsg, threadID, err
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}

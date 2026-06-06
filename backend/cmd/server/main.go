@@ -22,8 +22,8 @@ func main() {
 
 	r := api.NewRouter(svc)
 	addr := ":" + cfg.Port
-	log.Printf("[dental-video-api] postgres=%v s3=%v openai=%v listening %s",
-		svc.UsePostgres(), cfg.S3Enabled(), cfg.OpenAIEnabled(), addr)
+	log.Printf("[dental-video-gateway] postgres=%v microservices=%v listening %s",
+		svc.UsePostgres(), cfg.MicroservicesEnabled(), addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatal(err)
 	}

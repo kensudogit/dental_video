@@ -6,6 +6,29 @@ import "context"
 type ctxKey int
 
 const principalKey ctxKey = 1
+const forwardAuthKey ctxKey = 2
+
+// ForwardAuth holds inbound auth headers for gateway → microservice propagation.
+type ForwardAuth struct {
+	Authorization string
+	Cookie        string
+	APIKey        string
+}
+
+func WithForwardAuth(ctx context.Context, authorization, cookie, apiKey string) context.Context {
+	return context.WithValue(ctx, forwardAuthKey, ForwardAuth{
+		Authorization: authorization,
+		Cookie:        cookie,
+		APIKey:        apiKey,
+	})
+}
+
+func ForwardAuthFrom(ctx context.Context) ForwardAuth {
+	if v, ok := ctx.Value(forwardAuthKey).(ForwardAuth); ok {
+		return v
+	}
+	return ForwardAuth{}
+}
 
 // Principal はマルチテナント SaaS の現在操作主体。
 type Principal struct {
