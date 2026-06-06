@@ -22,7 +22,7 @@ export function BrandLogo({ size = 44, animated = true, className = '' }: BrandL
         </>
       ) : null}
       <Image
-        src="/icon.svg"
+        src="/PC.png"
         alt={ui.appTitle}
         width={size}
         height={size}
