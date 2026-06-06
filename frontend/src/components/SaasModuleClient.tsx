@@ -19,6 +19,7 @@ import {
   CrmContactsDocument,
   CrmInteractionsDocument,
   ContractsModuleDocument,
+  CurrentSessionDocument,
   DxInitiativesDocument,
   RagAnswerDocument,
   RagDocumentsDocument,
@@ -42,8 +43,17 @@ function fmtDateTime(s?: string | null) {
 
 function gqlError(err: { message?: string } | undefined, fallback: string) {
   if (!err) return null
-  if (isAuthRequiredGraphQLError(err as Parameters<typeof isAuthRequiredGraphQLError>[0])) return ui.saasLoginHint
-  return err.message || graphQLErrorHint(err.message) || fallback
+  const msg = err.message ?? ''
+  const lower = msg.toLowerCase()
+  if (lower === 'forbidden') {
+    return 'API の再起動と再ログインが必要です。ターミナルで Ctrl+C → npm run dev:monolith → /login から demo@sakura-dental.jp / demo1234 でログインしてください。'
+  }
+  if (isAuthRequiredGraphQLError(err as Parameters<typeof isAuthRequiredGraphQLError>[0])) {
+    return lower.includes('module not enabled')
+      ? 'この SaaS モジュールは無効です。/saas で有効化してください。'
+      : ui.saasLoginHint
+  }
+  return msg || graphQLErrorHint(err.message) || fallback
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -89,6 +99,26 @@ function ModuleHead({ mod }: { mod: ModuleSlug }) {
 }
 
 export function SaasModuleClient({ module: mod }: { module: ModuleSlug }) {
+  const { data: sessionData, loading: sessionLoading } = useQuery(CurrentSessionDocument, {
+    fetchPolicy: 'network-only',
+  })
+
+  if (sessionLoading) {
+    return <p className="muted">{ui.boardLoading}</p>
+  }
+
+  if (!sessionData?.currentSession) {
+    return (
+      <div className="alert">
+        <p>{ui.saasLoginHint}</p>
+        <p className="muted small">デモ: demo@sakura-dental.jp / demo1234</p>
+        <Link href="/login" className="btn">
+          {ui.loginSubmit}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <>
       <ModuleHead mod={mod} />

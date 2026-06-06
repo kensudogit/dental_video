@@ -6,6 +6,10 @@ x-saas-env: &saas-env
   DATABASE_URL: postgres://dental:dental@db:5432/dental_video?sslmode=disable
   JWT_SECRET: dev-docker-change-me
 
+# One shared image tag for all SaaS microservices.
+x-saas-image: &saas-image
+  image: dental_video-saas:latest
+
 services:
   db:
     image: postgres:16-alpine
@@ -47,18 +51,25 @@ services:
       exit 0;
       "
 
-  saas-dx:
+  # Build SaaS image once (other saas-* services reuse the tag).
+  saas-image:
+    <<: *saas-image
     build:
       context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-dx
+      dockerfile: Dockerfile.saas-all
+    entrypoint: ["/bin/sh", "-c", "exit 0"]
+
+  saas-dx:
+    <<: *saas-image
+    command: ["/bin/saas-dx"]
     environment:
       <<: *saas-env
       PORT: "8081"
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health | grep -q ok"]
       interval: 5s
@@ -67,50 +78,44 @@ services:
       start_period: 10s
 
   saas-crm:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-crm
+    <<: *saas-image
+    command: ["/bin/saas-crm"]
     environment:
       <<: *saas-env
       PORT: "8082"
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
 
   saas-attendance:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-attendance
+    <<: *saas-image
+    command: ["/bin/saas-attendance"]
     environment:
       <<: *saas-env
       PORT: "8083"
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
 
   saas-contract:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-contract
+    <<: *saas-image
+    command: ["/bin/saas-contract"]
     environment:
       <<: *saas-env
       PORT: "8084"
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
 
   saas-chat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-chat
+    <<: *saas-image
+    command: ["/bin/saas-chat"]
     environment:
       <<: *saas-env
       PORT: "8085"
@@ -119,13 +124,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
 
   saas-rag:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.micro
-      args:
-        SERVICE: saas-rag
+    <<: *saas-image
+    command: ["/bin/saas-rag"]
     environment:
       <<: *saas-env
       PORT: "8086"
@@ -134,6 +138,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      saas-image:
+        condition: service_completed_successfully
 
   api:
     build:

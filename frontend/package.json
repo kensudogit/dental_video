@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
-    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
-    "dev": "tsx ../scripts/warn-if-api-down.ts && next dev",
+    "dev": "node ../scripts/warn-if-api-down.mjs && next dev",
     "build": "npm run codegen && next build",
     "build:docker": "npm run codegen && next build",
     "start": "next start",

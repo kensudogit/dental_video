@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pluszero/dental-video-api/internal/config"
+	"github.com/pluszero/dental-video-api/internal/models"
 	"github.com/pluszero/dental-video-api/internal/openai"
 	"github.com/pluszero/dental-video-api/internal/realtime"
 	"github.com/pluszero/dental-video-api/internal/saasremote"
@@ -25,6 +26,9 @@ type Service struct {
 	OpenAI   *openai.Client
 	Realtime *realtime.Hub
 	SaaSRemote *saasremote.Client
+	// memoryModuleEnabled は DATABASE_URL 未設定のローカル開発用。
+	memoryModuleEnabled map[models.SaasModuleCode]bool
+	memoryConsultStore  *memoryConsultStore
 }
 
 // New は DB 接続・マイグレーション・空 DB へのデモシードまで行う。
@@ -40,6 +44,7 @@ func New(cfg config.Config) (*Service, error) {
 			return nil, config.RailwayDatabaseRequiredError()
 		}
 		svc.Memory = store.New()
+		svc.initMemoryModules()
 		return svc, nil
 	}
 	svc.PG, err = postgres.Connect(cfg.DatabaseURL)

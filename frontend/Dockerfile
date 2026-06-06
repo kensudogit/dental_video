@@ -1,7 +1,10 @@
+# syntax=docker/dockerfile:1.7
 FROM node:22-alpine AS deps
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm ci
 
 FROM node:22-alpine AS build
 WORKDIR /app/frontend
@@ -9,7 +12,8 @@ COPY --from=deps /app/frontend/node_modules ./node_modules
 COPY graphql /app/graphql
 COPY frontend .
 ENV API_URL=http://api:8080
-RUN npm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build:docker
 
 FROM node:22-alpine AS run
 WORKDIR /app/frontend

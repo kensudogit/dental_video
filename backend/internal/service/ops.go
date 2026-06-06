@@ -256,6 +256,9 @@ func (s *Service) AddCasePost(ctx context.Context, discussionID, body string) (m
 
 // SendConsultation はユーザ発言を保存し OpenAI で歯科臨床教育アシスタント応答を生成する。
 func (s *Service) SendConsultation(ctx context.Context, threadID, message string) (models.ConsultationMessage, models.ConsultationMessage, error) {
+	if s.memoryMode() {
+		return s.memorySendConsultation(ctx, threadID, message)
+	}
 	if s.PG == nil || s.OpenAI == nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, tenant.ErrForbidden
 	}
@@ -308,6 +311,9 @@ func truncate(s string, n int) string {
 }
 
 func (s *Service) ListConsultThreads(ctx context.Context) ([]models.ConsultationThread, error) {
+	if s.memoryMode() {
+		return s.memoryListConsultThreads(ctx)
+	}
 	if s.PG == nil {
 		return nil, nil
 	}
@@ -323,6 +329,9 @@ func (s *Service) ListConsultThreads(ctx context.Context) ([]models.Consultation
 }
 
 func (s *Service) GetConsultThread(ctx context.Context, threadID string) (models.ConsultationThread, []models.ConsultationMessage, error) {
+	if s.memoryMode() {
+		return s.memoryGetConsultThread(ctx, threadID)
+	}
 	if s.PG == nil {
 		return models.ConsultationThread{}, nil, tenant.ErrForbidden
 	}

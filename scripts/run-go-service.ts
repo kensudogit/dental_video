@@ -59,10 +59,26 @@ const childEnv: NodeJS.ProcessEnv = {
   ...dotenv,
   ...process.env,
   PORT: process.env.PORT ?? defaultPorts[service] ?? '8080',
+  LOCAL_DEV: '1',
+}
+
+for (const key of Object.keys(childEnv)) {
+  if (key.startsWith('RAILWAY_')) {
+    delete childEnv[key]
+  }
 }
 
 if (monolith && service === 'server') {
   childEnv.SAAS_MONOLITH = 'true'
+  delete childEnv.DATABASE_URL
+  delete childEnv.DATABASE_PRIVATE_URL
+  delete childEnv.POSTGRES_URL
+  delete childEnv.POSTGRES_PRIVATE_URL
+  delete childEnv.PGHOST
+  delete childEnv.PGUSER
+  delete childEnv.PGPASSWORD
+  delete childEnv.PGDATABASE
+  delete childEnv.PGPORT
 }
 
 const child: ChildProcess = spawn(go, ['run', `./cmd/${service}`], {

@@ -6,6 +6,8 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { apiBase } from '@/lib/api-base'
+import { setAuthToken } from '@/lib/auth-session'
+import { resetApolloClient } from '@/lib/apollo-client'
 import { ui } from '@/lib/ui'
 
 const LOGIN_TIMEOUT_MS = 20000
@@ -15,6 +17,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('demo1234')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const isLocalHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -29,10 +34,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
         signal: AbortSignal.timeout(LOGIN_TIMEOUT_MS),
       })
+      const body = (await res.json()) as { token?: string; error?: string }
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        throw new Error((j as { error?: string }).error ?? 'Login failed')
+        throw new Error(body.error ?? 'Login failed')
       }
+      if (body.token) {
+        setAuthToken(body.token)
+      }
+      await resetApolloClient()
       // フルページ遷移で Apollo / Router のハングを回避
       window.location.assign('/settings')
     } catch (err) {
@@ -70,20 +79,34 @@ export default function LoginPage() {
             error.includes('DATABASE_URL') ||
             error.includes('Cannot reach API') ? (
               <div className="muted small" style={{ marginTop: '0.5rem' }}>
-                <p>Railway（dental_video サービス → Variables）:</p>
-                <ol style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
-                  <li>
-                    <strong>+ New Variable</strong> → Name: <code>DATABASE_URL</code> →{' '}
-                    <strong>Add Reference</strong> → Postgres → DATABASE_URL
-                  </li>
-                  <li>
-                    <strong>JWT_SECRET</strong> = ランダム文字列（API キーではない）
-                  </li>
-                  <li>
-                    <strong>OPENAI_API_KEY</strong> = OpenAI 用（JWT_SECRET とは別）
-                  </li>
-                  <li>Redeploy → <Link href="/status">/status</Link> で PostgreSQL: connected</li>
-                </ol>
+                {isLocalHost ? (
+                  <>
+                    <p>ローカル開発: ターミナルで Ctrl+C → 以下を実行して API を再起動してください。</p>
+                    <pre style={{ marginTop: '0.5rem', overflow: 'auto' }}>npm run dev:monolith</pre>
+                    <p style={{ marginTop: '0.5rem' }}>
+                      デモ: <code>demo@sakura-dental.jp</code> / <code>demo1234</code>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>Railway（dental_video サービス → Variables）:</p>
+                    <ol style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
+                      <li>
+                        <strong>+ New Variable</strong> → Name: <code>DATABASE_URL</code> →{' '}
+                        <strong>Add Reference</strong> → Postgres → DATABASE_URL
+                      </li>
+                      <li>
+                        <strong>JWT_SECRET</strong> = ランダム文字列（API キーではない）
+                      </li>
+                      <li>
+                        <strong>OPENAI_API_KEY</strong> = OpenAI 用（JWT_SECRET とは別）
+                      </li>
+                      <li>
+                        Redeploy → <Link href="/status">/status</Link> で PostgreSQL: connected
+                      </li>
+                    </ol>
+                  </>
+                )}
               </div>
             ) : error.includes('timed out') || error.includes('Timeout') ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>
@@ -91,7 +114,8 @@ export default function LoginPage() {
               </p>
             ) : error === 'invalid credentials' ? (
               <p className="muted small" style={{ marginTop: '0.5rem' }}>
-                Demo: demo@sakura-dental.jp / demo1234 — redeploy after DATABASE_URL is set so the demo account is seeded.
+                Demo: demo@sakura-dental.jp / demo1234
+                {!isLocalHost ? ' — redeploy after DATABASE_URL is set so the demo account is seeded.' : ''}
               </p>
             ) : null}
           </div>

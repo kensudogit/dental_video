@@ -68,7 +68,7 @@ func (s *Service) APIKeyLookup(prefix, secret string) (tenant.Principal, bool) {
 // Login は資格情報検証後に JWT 付き AuthPayload を返す。
 func (s *Service) Login(ctx context.Context, email, password string) (models.AuthPayload, error) {
 	if s.PG == nil {
-		return models.AuthPayload{}, tenant.ErrUnauthorized
+		return s.memoryDemoLogin(email, password)
 	}
 	u, org, role, err := s.PG.Login(ctx, email, password)
 	if err != nil {
@@ -98,6 +98,21 @@ func (s *Service) RegisterClinic(ctx context.Context, in postgres.RegisterInput)
 }
 
 func (s *Service) CurrentSession(ctx context.Context) (*models.Session, error) {
+	if s.Memory != nil {
+		p, ok := tenant.PrincipalFrom(ctx)
+		if !ok || p.AuthVia == "" {
+			return nil, nil
+		}
+		sess := memoryDemoSession()
+		sess.User.ID = p.UserID
+		sess.User.Email = p.Email
+		sess.User.Name = p.Name
+		sess.Organization.ID = p.OrgID
+		if p.Role != "" {
+			sess.Role = models.MemberRole(p.Role)
+		}
+		return &sess, nil
+	}
 	if s.PG == nil {
 		return nil, nil
 	}

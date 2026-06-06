@@ -2,9 +2,10 @@
 
 /**
  * ブラウザ用 Apollo Client シングルトン。
- * Mutation / Query は同一オリジン /graphql + credentials: include。
+ * Mutation / Query は同一オリジン /graphql + credentials: include + Bearer JWT。
  */
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
+import { getAuthToken } from '@/lib/auth-session'
 
 /** SSR 初回は API_URL 直叩き、クライアントは Next プロキシ経由 */
 function graphqlHttpUri(): string {
@@ -20,7 +21,18 @@ let client: ApolloClient | null = null
 export function getApolloClient(): ApolloClient {
   if (!client) {
     client = new ApolloClient({
-      link: new HttpLink({ uri: graphqlHttpUri(), credentials: 'include' }),
+      link: new HttpLink({
+        uri: graphqlHttpUri(),
+        credentials: 'include',
+        fetch(uri, options) {
+          const token = getAuthToken()
+          const headers = new Headers(options?.headers)
+          if (token) {
+            headers.set('Authorization', `Bearer ${token}`)
+          }
+          return fetch(uri, { ...options, headers })
+        },
+      }),
       cache: new InMemoryCache(),
       defaultOptions: {
         watchQuery: { fetchPolicy: 'cache-and-network' },

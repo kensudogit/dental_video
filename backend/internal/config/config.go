@@ -172,6 +172,9 @@ func (c Config) OpenAIEnabled() bool {
 
 // IsRailway は Railway 上で動作しているか（DB SSL・メモリストア方針の判定用）。
 func IsRailway() bool {
+	if os.Getenv("LOCAL_DEV") == "1" || strings.EqualFold(os.Getenv("LOCAL_DEV"), "true") {
+		return false
+	}
 	return os.Getenv("RAILWAY_ENVIRONMENT") != "" ||
 		os.Getenv("RAILWAY_PROJECT_ID") != "" ||
 		os.Getenv("RAILWAY_SERVICE_ID") != ""

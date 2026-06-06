@@ -15,8 +15,14 @@ func (s *Service) requireModule(ctx context.Context, code models.SaasModuleCode)
 	if err != nil {
 		return tenant.Principal{}, err
 	}
+	if s.Memory != nil && s.PG == nil {
+		if !s.memoryIsModuleEnabled(code) {
+			return tenant.Principal{}, tenant.ErrModuleDisabled
+		}
+		return p, nil
+	}
 	if s.PG == nil {
-		return tenant.Principal{}, tenant.ErrForbidden
+		return tenant.Principal{}, tenant.ErrUnauthorized
 	}
 	ok, err := s.PG.IsModuleEnabled(ctx, p.OrgID, code)
 	if err != nil {
@@ -29,10 +35,13 @@ func (s *Service) requireModule(ctx context.Context, code models.SaasModuleCode)
 }
 
 func (s *Service) ListSaasModules(ctx context.Context) ([]models.SaasModule, error) {
-	p, err := s.requireAuth(ctx)
-	if err != nil {
+	if _, err := s.requireAuth(ctx); err != nil {
 		return nil, err
 	}
+	if s.memoryMode() {
+		return s.memoryListSaasModules(), nil
+	}
+	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListOrgModules(ctx, p.OrgID)
 }
 
@@ -46,6 +55,9 @@ func (s *Service) SetSaasModuleEnabled(ctx context.Context, code models.SaasModu
 	}
 	if !isValidModuleCode(code) {
 		return models.SaasModule{}, tenant.ErrForbidden
+	}
+	if s.memoryMode() {
+		return s.memorySetSaasModuleEnabled(code, enabled)
 	}
 	return s.PG.SetOrgModuleEnabled(ctx, p.OrgID, code, enabled)
 }
@@ -70,6 +82,9 @@ func (s *Service) ListDxInitiatives(ctx context.Context) ([]models.DxInitiative,
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListDxInitiatives(ctx)
 	}
+	if s.memoryMode() {
+		return []models.DxInitiative{}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListDxInitiatives(ctx, p.OrgID)
 }
@@ -80,6 +95,13 @@ func (s *Service) CreateDxInitiative(ctx context.Context, in models.DxInitiative
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateDxInitiative(ctx, in)
+	}
+	if s.memoryMode() {
+		return models.DxInitiative{
+			ID: in.Title, OrgID: demoOrgID, Title: in.Title, Description: in.Description,
+			Status: in.Status, ProgressPct: in.ProgressPct, OwnerName: in.OwnerName, DueDate: in.DueDate,
+			CreatedAt: time.Now(),
+		}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateDxInitiative(ctx, p.OrgID, in)
@@ -92,6 +114,9 @@ func (s *Service) ListCrmContacts(ctx context.Context) ([]models.CrmContact, err
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListCrmContacts(ctx)
 	}
+	if s.memoryMode() {
+		return []models.CrmContact{}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListCrmContacts(ctx, p.OrgID)
 }
@@ -102,6 +127,12 @@ func (s *Service) CreateCrmContact(ctx context.Context, in models.CrmContactInpu
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateCrmContact(ctx, in)
+	}
+	if s.memoryMode() {
+		return models.CrmContact{
+			ID: "mem-crm", OrgID: demoOrgID, Name: in.Name, Email: in.Email, Phone: in.Phone,
+			Company: in.Company, Stage: in.Stage, Notes: in.Notes, CreatedAt: time.Now(),
+		}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateCrmContact(ctx, p.OrgID, in)
@@ -114,6 +145,9 @@ func (s *Service) CreateCrmInteraction(ctx context.Context, contactID, kind, sum
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateCrmInteraction(ctx, contactID, kind, summary)
 	}
+	if s.memoryMode() {
+		return models.CrmInteraction{ID: "mem-int", ContactID: contactID, Kind: kind, Summary: summary, OccurredAt: time.Now()}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateCrmInteraction(ctx, p.OrgID, contactID, kind, summary)
 }
@@ -125,6 +159,9 @@ func (s *Service) ListCrmInteractions(ctx context.Context, contactID string) ([]
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListCrmInteractions(ctx, contactID)
 	}
+	if s.memoryMode() {
+		return []models.CrmInteraction{}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListCrmInteractions(ctx, p.OrgID, contactID)
 }
@@ -135,6 +172,9 @@ func (s *Service) ListAttendanceRecords(ctx context.Context, userID string) ([]m
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListAttendanceRecords(ctx)
+	}
+	if s.memoryMode() {
+		return []models.AttendanceRecord{}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	if userID == "" {
@@ -149,6 +189,11 @@ func (s *Service) ClockIn(ctx context.Context, note string) (models.AttendanceRe
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ClockIn(ctx, note)
+	}
+	if s.memoryMode() {
+		p, _ := tenant.PrincipalFrom(ctx)
+		now := time.Now()
+		return models.AttendanceRecord{ID: "mem-att", OrgID: demoOrgID, UserID: p.UserID, UserName: p.Name, ClockIn: now, Note: note}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	if open, has, err := s.PG.OpenAttendanceClock(ctx, p.OrgID, p.UserID); err != nil {
@@ -165,6 +210,10 @@ func (s *Service) ClockOut(ctx context.Context) (models.AttendanceRecord, error)
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ClockOut(ctx)
+	}
+	if s.memoryMode() {
+		now := time.Now()
+		return models.AttendanceRecord{ID: "mem-att", OrgID: demoOrgID, ClockIn: now.Add(-8 * time.Hour), ClockOut: &now}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	open, has, err := s.PG.OpenAttendanceClock(ctx, p.OrgID, p.UserID)
@@ -184,6 +233,9 @@ func (s *Service) ListLeaveRequests(ctx context.Context) ([]models.LeaveRequest,
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListLeaveRequests(ctx)
 	}
+	if s.memoryMode() {
+		return []models.LeaveRequest{}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListLeaveRequests(ctx, p.OrgID)
 }
@@ -194,6 +246,13 @@ func (s *Service) CreateLeaveRequest(ctx context.Context, start, end time.Time, 
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateLeaveRequest(ctx, start.Format("2006-01-02"), end.Format("2006-01-02"), reason)
+	}
+	if s.memoryMode() {
+		p, _ := tenant.PrincipalFrom(ctx)
+		return models.LeaveRequest{
+			ID: "mem-lv", OrgID: demoOrgID, UserID: p.UserID, UserName: p.Name,
+			StartDate: start, EndDate: end, Reason: reason, Status: "PENDING", CreatedAt: time.Now(),
+		}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateLeaveRequest(ctx, p.OrgID, p.UserID, start, end, reason)
@@ -210,6 +269,9 @@ func (s *Service) ApproveLeaveRequest(ctx context.Context, id string) (models.Le
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ApproveLeaveRequest(ctx, id)
 	}
+	if s.memoryMode() {
+		return models.LeaveRequest{ID: id, OrgID: demoOrgID, Status: "APPROVED"}, nil
+	}
 	return s.PG.UpdateLeaveStatus(ctx, p.OrgID, id, "APPROVED")
 }
 
@@ -219,6 +281,9 @@ func (s *Service) ListContractTemplates(ctx context.Context) ([]models.ContractT
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListContractTemplates(ctx)
+	}
+	if s.memoryMode() {
+		return []models.ContractTemplate{}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListContractTemplates(ctx, p.OrgID)
@@ -231,6 +296,9 @@ func (s *Service) CreateContractTemplate(ctx context.Context, name, body string)
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateContractTemplate(ctx, name, body)
 	}
+	if s.memoryMode() {
+		return models.ContractTemplate{ID: "mem-tpl", OrgID: demoOrgID, Name: name, Body: body, CreatedAt: time.Now()}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateContractTemplate(ctx, p.OrgID, name, body)
 }
@@ -241,6 +309,9 @@ func (s *Service) ListContracts(ctx context.Context) ([]models.Contract, error) 
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListContracts(ctx)
+	}
+	if s.memoryMode() {
+		return []models.Contract{}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListContracts(ctx, p.OrgID)
@@ -253,6 +324,12 @@ func (s *Service) CreateContract(ctx context.Context, templateID, title, partyNa
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateContract(ctx, templateID, title, partyName, partyEmail, body)
 	}
+	if s.memoryMode() {
+		return models.Contract{
+			ID: "mem-ctr", OrgID: demoOrgID, TemplateID: templateID, Title: title,
+			PartyName: partyName, PartyEmail: partyEmail, Body: body, Status: "DRAFT", CreatedAt: time.Now(),
+		}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateContract(ctx, p.OrgID, templateID, title, partyName, partyEmail, body)
 }
@@ -263,6 +340,10 @@ func (s *Service) SignContract(ctx context.Context, id string) (models.Contract,
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.SignContract(ctx, id)
+	}
+	if s.memoryMode() {
+		now := time.Now()
+		return models.Contract{ID: id, OrgID: demoOrgID, Status: "SIGNED", SignedAt: &now}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.SignContract(ctx, p.OrgID, id)
@@ -313,6 +394,9 @@ func (s *Service) ListRagDocuments(ctx context.Context) ([]models.RagDocument, e
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.ListRagDocuments(ctx)
 	}
+	if s.memoryMode() {
+		return []models.RagDocument{}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListRagDocuments(ctx, p.OrgID)
 }
@@ -324,6 +408,15 @@ func (s *Service) CreateRagDocument(ctx context.Context, in models.RagDocumentIn
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.CreateRagDocument(ctx, in)
 	}
+	if s.memoryMode() {
+		tags := in.Tags
+		if tags == nil {
+			tags = []string{}
+		}
+		return models.RagDocument{
+			ID: "mem-rag", OrgID: demoOrgID, Title: in.Title, Content: in.Content, Tags: tags, CreatedAt: time.Now(),
+		}, nil
+	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateRagDocument(ctx, p.OrgID, in)
 }
@@ -334,6 +427,9 @@ func (s *Service) SearchRagDocuments(ctx context.Context, query string, limit in
 	}
 	if s.useRemoteSaaS() {
 		return s.SaaSRemote.SearchRagDocuments(ctx, query, limit)
+	}
+	if s.memoryMode() {
+		return []models.RagSearchHit{}, nil
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	hits, err := s.PG.SearchRagDocuments(ctx, p.OrgID, query, limit)

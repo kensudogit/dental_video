@@ -21,11 +21,6 @@ type AuthHandler struct {
 
 // Login はメール/パスワードで認証し、dv_token Cookie と JSON を返す。
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	if !h.svc.UsePostgres() {
-		writeError(w, http.StatusServiceUnavailable, "postgresql not configured — set DATABASE_URL on Railway")
-		return
-	}
-
 	var body struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
