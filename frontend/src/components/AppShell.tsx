@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <aside className="sidebar">
         <div className="brand">
-          <BrandLogo size={44} animated />
+          <BrandLogo size={36} animated />
           <div>
             <div className="brand-title">{ui.appTitle}</div>
             <div className="brand-sub">{ui.appSubtitle}</div>

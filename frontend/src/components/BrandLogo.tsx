@@ -13,7 +13,14 @@ export function BrandLogo({ size = 44, animated = true, className = '' }: BrandL
   return (
     <div
       className={`brand-logo-wrap${animated ? ' brand-logo-wrap--animated' : ''}${className ? ` ${className}` : ''}`}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        maxWidth: size,
+        minHeight: size,
+        maxHeight: size,
+      }}
     >
       {animated ? (
         <>
