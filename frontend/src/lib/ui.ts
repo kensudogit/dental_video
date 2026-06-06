@@ -119,6 +119,7 @@ export const ui = {
     `${n} \u672c \u00b7 \u7d04 ${min} \u5206`,
   livePanelTitle: '\u30e9\u30a4\u30d6\u5b66\u7fd2\u30d5\u30a3\u30fc\u30c9',
   liveConnecting: '\u63a5\u7d9a\u4e2d...',
+  liveReconnecting: '\u518d\u63a5\u7d9a\u4e2d...',
   liveActive: '\u30e9\u30a4\u30d6\u66f4\u65b0\u4e2d',
   liveOffline: '\u30aa\u30d5\u30e9\u30a4\u30f3',
   liveOfflineHint: (wsTarget: string, localDev: boolean) =>

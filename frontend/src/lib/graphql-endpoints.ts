@@ -2,6 +2,7 @@
  * GraphQL HTTP / WebSocket エンドポイント解決（Gateway BFF 向け）。
  */
 import { isRailway, isUnifiedDeploy, resolveApiUrl } from '@/lib/resolve-api-url'
+import type { WsConnectionState } from '@/lib/urql-client'
 
 export function isLoopbackHost(host: string): boolean {
   const h = host.toLowerCase()
@@ -63,6 +64,7 @@ export type GraphqlRuntimeConfig = {
 
 export type GraphqlRuntimeContextValue = GraphqlRuntimeConfig & {
   subscriptionReady: boolean
+  wsConnection: WsConnectionState
 }
 
 export function pickBrowserApiBase(bases: string[]): string {

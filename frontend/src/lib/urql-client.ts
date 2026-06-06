@@ -4,18 +4,49 @@ import { cacheExchange, Client, fetchExchange, subscriptionExchange } from '@urq
 import { createClient as createWSClient, type Client as WSClient } from 'graphql-ws'
 import { defaultGraphqlWsUri, graphqlHttpUri } from '@/lib/graphql-endpoints'
 
+export type WsConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline'
+
+let wsConnectionState: WsConnectionState = 'connecting'
+const wsListeners = new Set<(state: WsConnectionState) => void>()
+
+function setWsConnectionState(next: WsConnectionState) {
+  if (wsConnectionState === next) return
+  wsConnectionState = next
+  wsListeners.forEach((fn) => fn(next))
+}
+
+export function getWsConnectionState(): WsConnectionState {
+  return wsConnectionState
+}
+
+export function subscribeWsConnectionState(listener: (state: WsConnectionState) => void): () => void {
+  wsListeners.add(listener)
+  listener(wsConnectionState)
+  return () => {
+    wsListeners.delete(listener)
+  }
+}
+
 function buildWsClient(wsUrl: string): WSClient {
   return createWSClient({
     url: wsUrl,
-    retryAttempts: 12,
-    retryWait: async (retries) => {
-      await new Promise((r) => setTimeout(r, Math.min(800 + retries * 400, 5000)))
-    },
+    keepAlive: 12_000,
+    retryAttempts: Number.POSITIVE_INFINITY,
     shouldRetry: () => true,
+    retryWait: async (retries) => {
+      setWsConnectionState('reconnecting')
+      await new Promise((r) => setTimeout(r, Math.min(1000 + retries * 500, 10_000)))
+    },
+    on: {
+      connected: () => setWsConnectionState('connected'),
+      closed: () => setWsConnectionState('reconnecting'),
+      error: () => setWsConnectionState('reconnecting'),
+    },
   })
 }
 
 export function createUrqlClient(wsUrl?: string): Client {
+  setWsConnectionState('connecting')
   const resolvedWs = wsUrl ?? defaultGraphqlWsUri()
   const wsClient = typeof window !== 'undefined' ? buildWsClient(resolvedWs) : null
 

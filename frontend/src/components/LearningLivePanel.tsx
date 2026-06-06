@@ -20,6 +20,26 @@ type ActivityRow = {
   occurredAt: string
 }
 
+function liveBadgeState(wsConnection: string, wsError: boolean): {
+  label: string
+  className: string
+  showOfflineHint: boolean
+} {
+  if (wsConnection === 'connected') {
+    return { label: ui.liveActive, className: '', showOfflineHint: false }
+  }
+  if (wsConnection === 'reconnecting') {
+    return { label: ui.liveReconnecting, className: ' live-badge--connecting', showOfflineHint: false }
+  }
+  if (wsConnection === 'connecting') {
+    return { label: ui.liveConnecting, className: ' live-badge--connecting', showOfflineHint: false }
+  }
+  if (wsError) {
+    return { label: ui.liveOffline, className: ' live-badge--offline', showOfflineHint: true }
+  }
+  return { label: ui.liveReconnecting, className: ' live-badge--connecting', showOfflineHint: false }
+}
+
 function LivePanelConnecting() {
   return (
     <section className="live-panel" aria-live="polite">
@@ -37,7 +57,6 @@ function LivePanelBody() {
   const [stats, setStats] = useState<string | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
   const [feed, setFeed] = useState<ActivityRow[]>([])
-  const [connecting, setConnecting] = useState(true)
 
   const [dash] = useSubscription({ query: DashboardUpdatedDocument })
   const [prog] = useSubscription({
@@ -49,22 +68,10 @@ function LivePanelBody() {
     variables: { learnerId: DEMO_LEARNER_ID },
   })
 
-  const wsError = dash.error ?? prog.error ?? activity.error
-
-  useEffect(() => {
-    if (wsError) {
-      setConnecting(false)
-      return
-    }
-    if (dash.data || prog.data || activity.data) {
-      setConnecting(false)
-    }
-  }, [wsError, dash.data, prog.data, activity.data])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setConnecting(false), 8000)
-    return () => window.clearTimeout(timer)
-  }, [])
+  const wsError = Boolean(dash.error ?? prog.error ?? activity.error)
+  const badge = liveBadgeState(runtime.wsConnection, wsError)
+  const wsTarget = runtime.graphqlWsUrl || runtime.apiBase || 'Gateway'
+  const offlineHint = ui.liveOfflineHint(wsTarget, runtime.localDev)
 
   useEffect(() => {
     const d = dash.data?.dashboardUpdated
@@ -89,26 +96,13 @@ function LivePanelBody() {
     }
   }, [activity.data])
 
-  const wsState = wsError
-    ? ui.liveOffline
-    : connecting
-      ? ui.liveConnecting
-      : ui.liveActive
-
-  const wsTarget = runtime.graphqlWsUrl || runtime.apiBase || 'Gateway'
-  const offlineHint = ui.liveOfflineHint(wsTarget, runtime.localDev)
-
   return (
     <section className="live-panel" aria-live="polite">
       <header className="live-panel-head">
         <h2>{ui.livePanelTitle}</h2>
-        <span
-          className={`live-badge${wsError ? ' live-badge--offline' : connecting ? ' live-badge--connecting' : ''}`}
-        >
-          {wsState}
-        </span>
+        <span className={`live-badge${badge.className}`}>{badge.label}</span>
       </header>
-      {wsError ? <p className="muted small live-offline-hint">{offlineHint}</p> : null}
+      {badge.showOfflineHint ? <p className="muted small live-offline-hint">{offlineHint}</p> : null}
       {stats ? <p className="live-stat">{stats}</p> : null}
       {progress ? <p className="live-progress">{progress}</p> : null}
       <ul className="live-feed">
@@ -119,7 +113,7 @@ function LivePanelBody() {
           </li>
         ))}
       </ul>
-      {feed.length === 0 && !wsError ? <p className="muted small">{ui.liveEmpty}</p> : null}
+      {feed.length === 0 && !badge.showOfflineHint ? <p className="muted small">{ui.liveEmpty}</p> : null}
     </section>
   )
 }
