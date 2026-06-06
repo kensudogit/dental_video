@@ -59,6 +59,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   saas-crm:
     build:
@@ -162,7 +168,7 @@ services:
       minio-init:
         condition: service_completed_successfully
       saas-dx:
-        condition: service_started
+        condition: service_healthy
       saas-crm:
         condition: service_started
       saas-attendance:

@@ -100,12 +100,65 @@ func Load() Config {
 	}
 }
 
-// MicroservicesEnabled is true when SaaS traffic should go to separate services (default on).
+// MicroservicesEnabled is true when SaaS traffic should go to separate services.
 func (c Config) MicroservicesEnabled() bool {
 	if os.Getenv("SAAS_MONOLITH") == "true" {
 		return false
 	}
+	if os.Getenv("UNIFIED_DEPLOY") == "1" || os.Getenv("UNIFIED_DEPLOY") == "true" {
+		return false
+	}
+	if os.Getenv("SAAS_MICROSERVICES") == "false" {
+		return false
+	}
+	if c.saasEndpointsConflictWithGateway() {
+		return false
+	}
 	return true
+}
+
+func (c Config) saasEndpointsConflictWithGateway() bool {
+	gwKey := loopbackPortKey(c.Port)
+	if gwKey == "" {
+		return false
+	}
+	for _, raw := range []string{
+		c.SaasDxURL, c.SaasCrmURL, c.SaasAttendanceURL,
+		c.SaasContractURL, c.SaasChatURL, c.SaasRagURL,
+	} {
+		if key, ok := loopbackPortKeyFromURL(raw); ok && key == gwKey {
+			return true
+		}
+	}
+	return false
+}
+
+func loopbackPortKey(port string) string {
+	port = strings.TrimSpace(port)
+	if port == "" {
+		return ""
+	}
+	return "loopback:" + port
+}
+
+func loopbackPortKeyFromURL(raw string) (string, bool) {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || u.Host == "" {
+		return "", false
+	}
+	host := strings.ToLower(u.Hostname())
+	if host != "localhost" && host != "127.0.0.1" && host != "::1" {
+		return "", false
+	}
+	port := u.Port()
+	if port == "" {
+		if u.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+	return loopbackPortKey(port), true
 }
 
 // S3Enabled は動画プリサインドアップロードが利用可能か。

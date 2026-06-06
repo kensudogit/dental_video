@@ -32,6 +32,7 @@ fi
 export API_INTERNAL_PORT="${API_PORT}"
 export API_URL="http://127.0.0.1:${API_PORT}"
 export UNIFIED_DEPLOY=1
+export SAAS_MONOLITH=true
 
 # Railway Postgres plugin often exposes DATABASE_PRIVATE_URL first.
 if [ -z "${DATABASE_URL:-}" ] && [ -n "${DATABASE_PRIVATE_URL:-}" ]; then

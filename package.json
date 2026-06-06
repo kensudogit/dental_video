@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n gw,dx,crm,att,ctr,chat,rag,web \"npm run dev:gateway\" \"npm run dev:saas-dx\" \"npm run dev:saas-crm\" \"npm run dev:saas-attendance\" \"npm run dev:saas-contract\" \"npm run dev:saas-chat\" \"npm run dev:saas-rag\" \"npm run dev:web\"",
-    "dev:monolith": "concurrently -k -n api,web \"npm run dev:gateway\" \"npm run dev:web\"",
+    "dev:monolith": "concurrently -k -n api,web \"tsx scripts/run-go-service.ts server --monolith\" \"npm run dev:web\"",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",

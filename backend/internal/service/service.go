@@ -3,7 +3,9 @@ package service
 
 import (
 	"context"
+	"log"
 	"os"
+	"time"
 
 	"github.com/pluszero/dental-video-api/internal/config"
 	"github.com/pluszero/dental-video-api/internal/openai"
@@ -51,7 +53,13 @@ func New(cfg config.Config) (*Service, error) {
 		return nil, err
 	}
 	if cfg.MicroservicesEnabled() {
-		svc.SaaSRemote = saasremote.New(cfg)
+		client := saasremote.New(cfg)
+		if waitForRemote(client) {
+			svc.SaaSRemote = client
+			log.Printf("[gateway] SaaS microservices: remote (dx=%s)", cfg.SaasDxURL)
+		} else {
+			log.Printf("[gateway] SaaS microservices unreachable at %s; using in-process handlers", cfg.SaasDxURL)
+		}
 	}
 	return svc, nil
 }
@@ -65,4 +73,19 @@ func (s *Service) Close() {
 // UsePostgres は本番データが Postgres かどうか（ステータス表示用）。
 func (s *Service) UsePostgres() bool {
 	return s.PG != nil
+}
+
+func waitForRemote(client *saasremote.Client) bool {
+	for attempt := 0; attempt < 5; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ok := client.Available(ctx)
+		cancel()
+		if ok {
+			return true
+		}
+		if attempt < 4 {
+			time.Sleep(time.Second)
+		}
+	}
+	return false
 }

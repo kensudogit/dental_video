@@ -291,3 +291,17 @@ func (c *Client) RagAnswer(ctx context.Context, query string) (string, []models.
 	}
 	return out.Answer, out.Sources, nil
 }
+
+// Available reports whether the DX microservice responds on /health.
+func (c *Client) Available(ctx context.Context) bool {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.dx, "/")+"/health", nil)
+	if err != nil {
+		return false
+	}
+	res, err := c.http.Do(req)
+	if err != nil {
+		return false
+	}
+	defer res.Body.Close()
+	return res.StatusCode == http.StatusOK
+}

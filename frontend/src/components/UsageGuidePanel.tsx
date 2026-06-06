@@ -132,7 +132,8 @@ const L = {
       items: [
         'npm run install:all → cd backend; go mod tidy',
         'npm run dev — gw + dx + crm + att + ctr + chat + rag + web',
-        'npm run dev:monolith — SAAS_MONOLITH=true で Gateway のみ',
+        'npm run dev:monolith — Gateway のみ（SaaS は DB 直アクセス）',
+        'マイクロサービス未起動時は Gateway が自動で in-process にフォールバック',
         'npm run codegen（schema 変更後）',
       ],
     },

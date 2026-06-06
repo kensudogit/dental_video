@@ -1,9 +1,12 @@
 import { spawn, type ChildProcess } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const service = process.argv[2] ?? 'server'
+const argv = process.argv.slice(2)
+const monolith = argv.includes('--monolith')
+const service = argv.find((a) => !a.startsWith('--')) ?? 'server'
+
 const defaultPorts: Record<string, string> = {
   server: '8080',
   'saas-dx': '8081',
@@ -17,6 +20,31 @@ const defaultPorts: Record<string, string> = {
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const backend = path.join(root, 'backend')
 
+function loadEnvFile(filePath: string): Record<string, string> {
+  if (!existsSync(filePath)) return {}
+  const out: Record<string, string> = {}
+  for (const line of readFileSync(filePath, 'utf8').split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq <= 0) continue
+    const key = trimmed.slice(0, eq).trim()
+    let val = trimmed.slice(eq + 1).trim()
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1)
+    }
+    if (!process.env[key]) {
+      out[key] = val
+    }
+  }
+  return out
+}
+
+const dotenv = loadEnvFile(path.join(root, '.env'))
+
 const goCandidates = [
   process.env.GO,
   process.platform === 'win32'
@@ -27,13 +55,20 @@ const goCandidates = [
 
 const go = goCandidates.find((c) => c === 'go' || existsSync(c)) ?? 'go'
 
+const childEnv: NodeJS.ProcessEnv = {
+  ...dotenv,
+  ...process.env,
+  PORT: process.env.PORT ?? defaultPorts[service] ?? '8080',
+}
+
+if (monolith && service === 'server') {
+  childEnv.SAAS_MONOLITH = 'true'
+}
+
 const child: ChildProcess = spawn(go, ['run', `./cmd/${service}`], {
   cwd: backend,
   stdio: 'inherit',
-  env: {
-    ...process.env,
-    PORT: process.env.PORT ?? defaultPorts[service] ?? '8080',
-  },
+  env: childEnv,
 })
 
 child.on('exit', (code, signal) => {
