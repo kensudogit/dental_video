@@ -3,10 +3,10 @@
 /**
  * アプリ共通レイアウト: サイドバー・トップバー・利用手順パネル。
  */
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { ui } from '@/lib/ui'
 import { UsageGuidePanel } from '@/components/UsageGuidePanel'
 
@@ -41,14 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <aside className="sidebar">
         <div className="brand">
-          <Image
-            src="/PC.png"
-            alt={ui.appTitle}
-            width={44}
-            height={44}
-            className="brand-logo"
-            priority
-          />
+          <BrandLogo size={44} animated />
           <div>
             <div className="brand-title">{ui.appTitle}</div>
             <div className="brand-sub">{ui.appSubtitle}</div>
