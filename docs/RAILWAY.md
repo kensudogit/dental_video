@@ -21,7 +21,7 @@
 |------|------|------|
 | `DATABASE_URL` | ?? | Postgres ? **Reference**?`${{Postgres.DATABASE_URL}}`? |
 | `JWT_SECRET` | 必須 | 32 文字以上のランダム文字列（**API キー不可**。`sk-ant-` や `sk-proj-` で始まる値は誤り） |
-| `OPENAI_API_KEY` | ??? | AI Board ? |
+| `OPENAI_API_KEY` | 任意 | AI チャットボット / AI Board（未設定時は設定案内メッセージを返します） |
 | `CORS_ORIGINS` | ?? | `https://<your-domain>.up.railway.app` |
 | `APP_PUBLIC_URL` | ?? | ??????? URL |
 

@@ -91,7 +91,12 @@ func (s *Service) memoryListSaasModules() []models.SaasModule {
 
 func (s *Service) memoryIsModuleEnabled(code models.SaasModuleCode) bool {
 	if s.memoryModuleEnabled == nil {
-		return true
+		for _, m := range defaultSaasModuleCatalog() {
+			if m.Code == code {
+				return m.Enabled
+			}
+		}
+		return false
 	}
 	enabled, ok := s.memoryModuleEnabled[code]
 	return ok && enabled

@@ -217,6 +217,9 @@ func SetupStatus(postgresConnected bool, dbSource string) map[string]any {
 	if !postgresConnected && IsRailway() {
 		out["hint"] = "dental_video service → Variables → + New Variable → Reference → Postgres → DATABASE_URL. JWT_SECRET = random string (not API key). Redeploy."
 	}
+	if postgresConnected && envPresence("OPENAI_API_KEY") != "set" {
+		out["openaiHint"] = "AI チャットボット / AI Board 用に OPENAI_API_KEY を Variables に追加して Redeploy してください。"
+	}
 	return out
 }
 
