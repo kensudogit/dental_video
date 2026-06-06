@@ -17,7 +17,7 @@ const noto = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: ui.metaTitle,
   description: ui.metaDesc,
-  icons: { icon: '/icon.svg' },
+  icons: { icon: '/PC.png' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

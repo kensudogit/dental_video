@@ -41,7 +41,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <aside className="sidebar">
         <div className="brand">
-          <Image src="/icon.svg" alt="" width={40} height={40} priority />
+          <Image
+            src="/PC.png"
+            alt={ui.appTitle}
+            width={44}
+            height={44}
+            className="brand-logo"
+            priority
+          />
           <div>
             <div className="brand-title">{ui.appTitle}</div>
             <div className="brand-sub">{ui.appSubtitle}</div>

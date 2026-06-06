@@ -42,6 +42,11 @@ html, body {
   margin-bottom: 1.5rem;
 }
 
+.brand-logo {
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
 .brand > div {
   flex: 1;
   min-width: 0;
