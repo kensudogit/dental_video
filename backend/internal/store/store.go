@@ -152,6 +152,18 @@ func (s *Store) GetVideo(id string) (models.Video, bool) {
 	return models.Video{}, false
 }
 
+func (s *Store) IncrementVideoViewCount(id string) (models.Video, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for i := range s.videos {
+		if s.videos[i].ID == id {
+			s.videos[i].ViewCount++
+			return s.videos[i], true
+		}
+	}
+	return models.Video{}, false
+}
+
 func (s *Store) FeaturedVideos() []models.Video {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

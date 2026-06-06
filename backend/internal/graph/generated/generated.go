@@ -245,6 +245,7 @@ type ComplexityRoot struct {
 		DeleteVideoNote          func(childComplexity int, id string) int
 		EnrollLearningPath       func(childComplexity int, pathID string, learnerID string) int
 		GenerateAnalyticsInsight func(childComplexity int, periodDays *int) int
+		RecordVideoView          func(childComplexity int, videoID string) int
 		SendConsultMessage       func(childComplexity int, threadID *string, message string) int
 		SetSaasModuleEnabled     func(childComplexity int, code SaasModuleCode, enabled bool) int
 		SignContract             func(childComplexity int, id string) int
@@ -457,6 +458,7 @@ type MutationResolver interface {
 	UpdateOrganization(ctx context.Context, input UpdateOrganizationInput) (*Organization, error)
 	GenerateAnalyticsInsight(ctx context.Context, periodDays *int) (*AnalyticsInsight, error)
 	UpdateWatchProgress(ctx context.Context, input UpdateWatchProgressInput) (*WatchProgress, error)
+	RecordVideoView(ctx context.Context, videoID string) (*Video, error)
 	CreateVideoNote(ctx context.Context, input CreateVideoNoteInput) (*VideoNote, error)
 	DeleteVideoNote(ctx context.Context, id string) (bool, error)
 	ToggleBookmark(ctx context.Context, videoID string, learnerID string) (*Bookmark, error)
@@ -1532,6 +1534,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.GenerateAnalyticsInsight(childComplexity, args["periodDays"].(*int)), true
+
+	case "Mutation.recordVideoView":
+		if e.complexity.Mutation.RecordVideoView == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_recordVideoView_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RecordVideoView(childComplexity, args["videoId"].(string)), true
 
 	case "Mutation.sendConsultMessage":
 		if e.complexity.Mutation.SendConsultMessage == nil {
@@ -3138,6 +3152,7 @@ type Mutation {
   updateOrganization(input: UpdateOrganizationInput!): Organization!
   generateAnalyticsInsight(periodDays: Int = 30): AnalyticsInsight!
   updateWatchProgress(input: UpdateWatchProgressInput!): WatchProgress!
+  recordVideoView(videoId: ID!): Video!
   createVideoNote(input: CreateVideoNoteInput!): VideoNote!
   deleteVideoNote(id: ID!): Boolean!
   toggleBookmark(videoId: ID!, learnerId: ID!): Bookmark
@@ -3793,6 +3808,34 @@ func (ec *executionContext) field_Mutation_generateAnalyticsInsight_argsPeriodDa
 	}
 
 	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_recordVideoView_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_recordVideoView_argsVideoID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["videoId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_recordVideoView_argsVideoID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["videoId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("videoId"))
+	if tmp, ok := rawArgs["videoId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -10374,6 +10417,93 @@ func (ec *executionContext) fieldContext_Mutation_updateWatchProgress(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateWatchProgress_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_recordVideoView(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_recordVideoView(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RecordVideoView(rctx, fc.Args["videoId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*Video)
+	fc.Result = res
+	return ec.marshalNVideo2ᚖgithubᚗcomᚋpluszeroᚋdentalᚑvideoᚑapiᚋinternalᚋgraphᚋgeneratedᚐVideo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_recordVideoView(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Video_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Video_title(ctx, field)
+			case "description":
+				return ec.fieldContext_Video_description(ctx, field)
+			case "category":
+				return ec.fieldContext_Video_category(ctx, field)
+			case "procedure":
+				return ec.fieldContext_Video_procedure(ctx, field)
+			case "skillLevel":
+				return ec.fieldContext_Video_skillLevel(ctx, field)
+			case "durationSec":
+				return ec.fieldContext_Video_durationSec(ctx, field)
+			case "thumbnailUrl":
+				return ec.fieldContext_Video_thumbnailUrl(ctx, field)
+			case "videoUrl":
+				return ec.fieldContext_Video_videoUrl(ctx, field)
+			case "instructorId":
+				return ec.fieldContext_Video_instructorId(ctx, field)
+			case "instructorName":
+				return ec.fieldContext_Video_instructorName(ctx, field)
+			case "tags":
+				return ec.fieldContext_Video_tags(ctx, field)
+			case "viewCount":
+				return ec.fieldContext_Video_viewCount(ctx, field)
+			case "publishedAt":
+				return ec.fieldContext_Video_publishedAt(ctx, field)
+			case "featured":
+				return ec.fieldContext_Video_featured(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Video", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_recordVideoView_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -22292,6 +22422,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "recordVideoView":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_recordVideoView(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createVideoNote":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createVideoNote(ctx, field)
@@ -26454,6 +26591,10 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋpluszeroᚋdentalᚑv
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNVideo2githubᚗcomᚋpluszeroᚋdentalᚑvideoᚑapiᚋinternalᚋgraphᚋgeneratedᚐVideo(ctx context.Context, sel ast.SelectionSet, v Video) graphql.Marshaler {
+	return ec._Video(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNVideo2ᚕᚖgithubᚗcomᚋpluszeroᚋdentalᚑvideoᚑapiᚋinternalᚋgraphᚋgeneratedᚐVideoᚄ(ctx context.Context, sel ast.SelectionSet, v []*Video) graphql.Marshaler {

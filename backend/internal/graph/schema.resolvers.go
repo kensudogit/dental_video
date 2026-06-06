@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pluszero/dental-video-api/internal/gqlconv"
@@ -54,6 +55,15 @@ func (r *mutationResolver) UpdateWatchProgress(ctx context.Context, input genera
 		return nil, err
 	}
 	return gqlconv.ToProgress(updated), nil
+}
+
+// RecordVideoView is the resolver for the recordVideoView field.
+func (r *mutationResolver) RecordVideoView(ctx context.Context, videoID string) (*generated.Video, error) {
+	v, err := r.svc.RecordVideoView(ctx, videoID)
+	if err != nil {
+		return nil, err
+	}
+	return gqlconv.ToVideo(v), nil
 }
 
 // CreateVideoNote is the resolver for the createVideoNote field.

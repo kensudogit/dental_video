@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { SkillBadge } from '@/components/SkillBadge'
 import { VideoDetailClient } from '@/components/VideoDetailClient'
+import { VideoViewTracker } from '@/components/VideoViewTracker'
 import { VideoDetailPageDocument, type VideoDetailPageQuery } from '@/lib/generated/graphql'
 import { gqlRequest } from '@/lib/gql'
 import { DEMO_LEARNER_ID } from '@/lib/learner'
@@ -45,6 +46,7 @@ export default async function VideoDetailPage({
 
   return (
     <>
+      <VideoViewTracker videoId={id} />
       <div className="page-head">
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <CategoryBadge category={video.category} />

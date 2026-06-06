@@ -128,6 +128,26 @@ func (db *DB) GetVideo(ctx context.Context, orgID, id string) (models.Video, boo
 	return v, true, nil
 }
 
+func (db *DB) IncrementVideoViewCount(ctx context.Context, orgID, id string) (models.Video, error) {
+	tag, err := db.Pool.Exec(ctx, `
+		UPDATE videos SET view_count = view_count + 1
+		WHERE org_id=$1 AND id=$2`, orgID, id)
+	if err != nil {
+		return models.Video{}, err
+	}
+	if tag.RowsAffected() == 0 {
+		return models.Video{}, pgx.ErrNoRows
+	}
+	v, ok, err := db.GetVideo(ctx, orgID, id)
+	if err != nil {
+		return models.Video{}, err
+	}
+	if !ok {
+		return models.Video{}, pgx.ErrNoRows
+	}
+	return v, nil
+}
+
 func (db *DB) FeaturedVideos(ctx context.Context, orgID string) ([]models.Video, error) {
 	rows, err := db.Pool.Query(ctx, `
 		SELECT v.id, v.title, v.description, v.category, v.procedure, v.skill_level, v.duration_sec,

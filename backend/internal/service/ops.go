@@ -45,6 +45,25 @@ func (s *Service) GetVideo(ctx context.Context, id string) (models.Video, bool, 
 	return v, ok, nil
 }
 
+func (s *Service) RecordVideoView(ctx context.Context, videoID string) (models.Video, error) {
+	if s.PG != nil {
+		oid, err := s.OrgID(ctx)
+		if err != nil {
+			return models.Video{}, err
+		}
+		v, err := s.PG.IncrementVideoViewCount(ctx, oid, videoID)
+		if err != nil {
+			return models.Video{}, err
+		}
+		return v, nil
+	}
+	v, ok := s.Memory.IncrementVideoViewCount(videoID)
+	if !ok {
+		return models.Video{}, tenant.ErrForbidden
+	}
+	return v, nil
+}
+
 func (s *Service) ListInstructors(ctx context.Context) ([]models.Instructor, error) {
 	if s.PG != nil {
 		oid, err := s.OrgID(ctx)

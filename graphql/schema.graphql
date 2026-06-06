@@ -348,6 +348,7 @@ type Mutation {
   updateOrganization(input: UpdateOrganizationInput!): Organization!
   generateAnalyticsInsight(periodDays: Int = 30): AnalyticsInsight!
   updateWatchProgress(input: UpdateWatchProgressInput!): WatchProgress!
+  recordVideoView(videoId: ID!): Video!
   createVideoNote(input: CreateVideoNoteInput!): VideoNote!
   deleteVideoNote(id: ID!): Boolean!
   toggleBookmark(videoId: ID!, learnerId: ID!): Bookmark
