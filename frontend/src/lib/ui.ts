@@ -121,8 +121,10 @@ export const ui = {
   liveConnecting: '\u63a5\u7d9a\u4e2d...',
   liveActive: '\u30e9\u30a4\u30d6\u66f4\u65b0\u4e2d',
   liveOffline: '\u30aa\u30d5\u30e9\u30a4\u30f3',
-  liveOfflineHint:
-    'API (:8080) \u3078\u306e WebSocket \u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093\u3002npm run dev \u3067 API \u3092\u8d77\u52d5\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+  liveOfflineHint: (wsTarget: string, unified: boolean) =>
+    unified
+      ? `Gateway (${wsTarget}) \u3078\u306e WebSocket \u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093\u3002Railway \u306e Deploy \u30ed\u30b0\u3067 [unified] API ready \u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002`
+      : `Gateway (${wsTarget}) \u3078\u306e WebSocket \u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093\u3002\u30ea\u30dd\u30b8\u30c8\u30ea root \u3067 npm run dev \u307e\u305f\u306f npm run dev:monolith \u3092\u5b9f\u884c\u3057\u3066 Gateway \u3092\u8d77\u52d5\u3057\u3066\u304f\u3060\u3055\u3044\u3002`,
   liveEmpty:
     '\u9032\u6377\u30fb\u30e1\u30e2\u30fb\u30af\u30a4\u30ba\u306e\u64cd\u4f5c\u304c\u3053\u3053\u306b\u8868\u793a\u3055\u308c\u307e\u3059\u3002',
   boardTitle: 'AI Board',

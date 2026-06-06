@@ -3,8 +3,9 @@
 /**
  * urql Subscription で学習進捗・ダッシュボード更新をリアルタイム表示。
  */
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { useSubscription } from 'urql'
+import { GraphqlRuntimeContext } from '@/components/GraphQLProviders'
 import {
   DashboardUpdatedDocument,
   LearningActivityDocument,
@@ -19,10 +20,24 @@ type ActivityRow = {
   occurredAt: string
 }
 
-export function LearningLivePanel() {
+function LivePanelConnecting() {
+  return (
+    <section className="live-panel" aria-live="polite">
+      <header className="live-panel-head">
+        <h2>{ui.livePanelTitle}</h2>
+        <span className="live-badge live-badge--connecting">{ui.liveConnecting}</span>
+      </header>
+      <p className="muted small">{ui.liveConnecting}</p>
+    </section>
+  )
+}
+
+function LivePanelBody() {
+  const runtime = useContext(GraphqlRuntimeContext)
   const [stats, setStats] = useState<string | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
   const [feed, setFeed] = useState<ActivityRow[]>([])
+  const [connecting, setConnecting] = useState(true)
 
   const [dash] = useSubscription({ query: DashboardUpdatedDocument })
   const [prog] = useSubscription({
@@ -35,6 +50,21 @@ export function LearningLivePanel() {
   })
 
   const wsError = dash.error ?? prog.error ?? activity.error
+
+  useEffect(() => {
+    if (wsError) {
+      setConnecting(false)
+      return
+    }
+    if (dash.data || prog.data || activity.data) {
+      setConnecting(false)
+    }
+  }, [wsError, dash.data, prog.data, activity.data])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setConnecting(false), 8000)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const d = dash.data?.dashboardUpdated
@@ -55,20 +85,30 @@ export function LearningLivePanel() {
   useEffect(() => {
     const ev = activity.data?.learningActivity
     if (ev) {
-      // 最新 8 件のみ保持
       setFeed((rows) => [{ kind: ev.kind, message: ev.message, occurredAt: ev.occurredAt }, ...rows].slice(0, 8))
     }
   }, [activity.data])
 
-  const wsState = wsError ? ui.liveOffline : dash.fetching ? ui.liveConnecting : ui.liveActive
+  const wsState = wsError
+    ? ui.liveOffline
+    : connecting
+      ? ui.liveConnecting
+      : ui.liveActive
+
+  const wsTarget = runtime.graphqlWsUrl || runtime.apiBase || 'Gateway'
+  const offlineHint = ui.liveOfflineHint(wsTarget, runtime.unified)
 
   return (
     <section className="live-panel" aria-live="polite">
       <header className="live-panel-head">
         <h2>{ui.livePanelTitle}</h2>
-        <span className={`live-badge${wsError ? ' live-badge--offline' : ''}`}>{wsState}</span>
+        <span
+          className={`live-badge${wsError ? ' live-badge--offline' : connecting ? ' live-badge--connecting' : ''}`}
+        >
+          {wsState}
+        </span>
       </header>
-      {wsError ? <p className="muted small">{ui.liveOfflineHint}</p> : null}
+      {wsError ? <p className="muted small live-offline-hint">{offlineHint}</p> : null}
       {stats ? <p className="live-stat">{stats}</p> : null}
       {progress ? <p className="live-progress">{progress}</p> : null}
       <ul className="live-feed">
@@ -82,4 +122,12 @@ export function LearningLivePanel() {
       {feed.length === 0 && !wsError ? <p className="muted small">{ui.liveEmpty}</p> : null}
     </section>
   )
+}
+
+export function LearningLivePanel() {
+  const runtime = useContext(GraphqlRuntimeContext)
+  if (!runtime.subscriptionReady) {
+    return <LivePanelConnecting />
+  }
+  return <LivePanelBody />
 }

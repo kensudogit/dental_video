@@ -547,6 +547,15 @@ html, body {
   color: var(--muted);
 }
 
+.live-badge--connecting {
+  background: rgba(251, 191, 36, 0.18);
+  color: #b45309;
+}
+
+.live-offline-hint {
+  line-height: 1.55;
+}
+
 .live-stat, .live-progress {
   margin: 0.35rem 0;
   font-size: 0.88rem;
