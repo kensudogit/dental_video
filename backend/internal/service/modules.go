@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/pluszero/dental-video-api/internal/models"
-	"github.com/pluszero/dental-video-api/internal/openai"
+	"github.com/pluszero/dental-video-api/internal/rag"
 	"github.com/pluszero/dental-video-api/internal/tenant"
 )
 
@@ -395,7 +394,7 @@ func (s *Service) ListRagDocuments(ctx context.Context) ([]models.RagDocument, e
 		return s.SaaSRemote.ListRagDocuments(ctx)
 	}
 	if s.memoryMode() {
-		return []models.RagDocument{}, nil
+		return s.memoryListRagDocuments(ctx)
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.ListRagDocuments(ctx, p.OrgID)
@@ -409,13 +408,7 @@ func (s *Service) CreateRagDocument(ctx context.Context, in models.RagDocumentIn
 		return s.SaaSRemote.CreateRagDocument(ctx, in)
 	}
 	if s.memoryMode() {
-		tags := in.Tags
-		if tags == nil {
-			tags = []string{}
-		}
-		return models.RagDocument{
-			ID: "mem-rag", OrgID: demoOrgID, Title: in.Title, Content: in.Content, Tags: tags, CreatedAt: time.Now(),
-		}, nil
+		return s.memoryCreateRagDocument(ctx, in)
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	return s.PG.CreateRagDocument(ctx, p.OrgID, in)
@@ -429,42 +422,27 @@ func (s *Service) SearchRagDocuments(ctx context.Context, query string, limit in
 		return s.SaaSRemote.SearchRagDocuments(ctx, query, limit)
 	}
 	if s.memoryMode() {
-		return []models.RagSearchHit{}, nil
+		return s.memorySearchRagDocuments(ctx, query, limit)
 	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	hits, err := s.PG.SearchRagDocuments(ctx, p.OrgID, query, limit)
 	if err != nil {
 		return nil, err
 	}
-	if len(hits) > 0 || s.OpenAI == nil || strings.TrimSpace(query) == "" {
+	if len(hits) > 0 {
 		return hits, nil
 	}
 	docs, _ := s.PG.ListRagDocuments(ctx, p.OrgID)
-	if len(docs) == 0 {
-		return hits, nil
+	if extra := rag.FallbackSearchWhenEmpty(ctx, s.Cfg, s.OpenAI, query, docs); len(extra) > 0 {
+		return extra, nil
 	}
-	ctxBlock := ""
-	for i, d := range docs {
-		if i >= 3 {
-			break
-		}
-		ctxBlock += d.Title + ":\n" + truncateDoc(d.Content, 800) + "\n\n"
-	}
-	answer, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, nil,
-		"以下の院内文書を参照し、質問に簡潔に答えてください。\n\n"+ctxBlock+"\n\n質問: "+query)
-	if err != nil {
-		return hits, nil
-	}
-	hits = append(hits, models.RagSearchHit{
-		DocumentID: docs[0].ID,
-		Title:      "AI 回答",
-		Snippet:    answer,
-		Score:      0.5,
-	})
 	return hits, nil
 }
 
 func (s *Service) RagAnswer(ctx context.Context, query string) (string, []models.RagSearchHit, error) {
+	if s.memoryMode() {
+		return s.memoryRagAnswer(ctx, query)
+	}
 	if s.useRemoteSaaS() {
 		if _, err := s.requireModule(ctx, models.ModuleDocRAG); err != nil {
 			return "", nil, err
@@ -475,33 +453,8 @@ func (s *Service) RagAnswer(ctx context.Context, query string) (string, []models
 	if err != nil {
 		return "", nil, err
 	}
-	if len(hits) == 0 {
-		return "関連する文書が見つかりませんでした。", hits, nil
-	}
-	if hits[0].Title == "AI 回答" {
-		return hits[0].Snippet, hits, nil
-	}
-	if s.OpenAI == nil {
-		return hits[0].Snippet, hits, nil
-	}
 	p, _ := tenant.PrincipalFrom(ctx)
 	docs, _ := s.PG.ListRagDocuments(ctx, p.OrgID)
-	ctxBlock := ""
-	for _, h := range hits {
-		for _, d := range docs {
-			if d.ID == h.DocumentID {
-				ctxBlock += d.Title + ":\n" + truncateDoc(d.Content, 600) + "\n\n"
-			}
-		}
-	}
-	answer, err := s.OpenAI.Chat(ctx, openai.DentalConsultSystem, nil,
-		"参照文書に基づき質問に答えてください。根拠がない場合はその旨を述べてください。\n\n"+ctxBlock+"\n\n質問: "+query)
-	return answer, hits, err
-}
-
-func truncateDoc(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n] + "..."
+	answer := rag.GenerateAnswer(ctx, s.Cfg, s.OpenAI, query, hits, docs)
+	return answer, hits, nil
 }

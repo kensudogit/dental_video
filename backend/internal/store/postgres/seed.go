@@ -356,5 +356,12 @@ func ensureSaasDemoData(ctx context.Context, db *DB) error {
 		return err
 	}
 
-	return nil
+	_, err = db.Pool.Exec(ctx, `
+		INSERT INTO rag_documents (id, org_id, title, content, tags)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (id) DO NOTHING`,
+		"rag-2", orgID, "\u4e88\u7d04\u30ad\u30e3\u30f3\u30bb\u30eb\u30dd\u30ea\u30b7\u30fc",
+		"\u524d\u65e517\u6642\u4ee5\u964d\u306e\u30ad\u30e3\u30f3\u30bb\u30eb\u306f\u30ad\u30e3\u30f3\u30bb\u30eb\u65991000\u5186\u3002\u7121\u65ad\u30ad\u30e3\u30f3\u30bb\u30eb\u306f2\u56de\u3067\u4e88\u7d04\u5236\u9650\u3092\u691c\u8a0e\u3059\u308b\u3002",
+		[]string{"受付", "運営"})
+	return err
 }

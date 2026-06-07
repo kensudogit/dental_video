@@ -29,6 +29,7 @@ type Service struct {
 	// memoryModuleEnabled は DATABASE_URL 未設定のローカル開発用。
 	memoryModuleEnabled map[models.SaasModuleCode]bool
 	memoryConsultStore  *memoryConsultStore
+	memoryRagStore      *memoryRagStore
 }
 
 // New は DB 接続・マイグレーション・空 DB へのデモシードまで行う。

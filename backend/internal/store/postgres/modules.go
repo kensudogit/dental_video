@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pluszero/dental-video-api/internal/models"
+	"github.com/pluszero/dental-video-api/internal/rag"
 )
 
 func (db *DB) ListOrgModules(ctx context.Context, orgID string) ([]models.SaasModule, error) {
@@ -447,10 +448,38 @@ func (db *DB) SearchRagDocuments(ctx context.Context, orgID, query string, limit
 			return nil, err
 		}
 		out = append(out, models.RagSearchHit{
-			DocumentID: id, Title: title, Snippet: snippet(content, q, 180), Score: score,
+			DocumentID: id, Title: title, Snippet: rag.Snippet(content, q, 180), Score: score,
 		})
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(out) > 0 {
+		return out, nil
+	}
+	// Japanese text: full-text 'simple' often misses CJK; fall back to substring match.
+	like := "%" + q + "%"
+	rows2, err := db.Pool.Query(ctx, `
+		SELECT id, title, content
+		FROM rag_documents
+		WHERE org_id = $1
+		  AND (title ILIKE $2 OR content ILIKE $2)
+		ORDER BY created_at DESC
+		LIMIT $3`, orgID, like, limit)
+	if err != nil {
+		return out, err
+	}
+	defer rows2.Close()
+	for rows2.Next() {
+		var id, title, content string
+		if err := rows2.Scan(&id, &title, &content); err != nil {
+			return nil, err
+		}
+		out = append(out, models.RagSearchHit{
+			DocumentID: id, Title: title, Snippet: rag.Snippet(content, q, 180), Score: 0.6,
+		})
+	}
+	return out, rows2.Err()
 }
 
 func (db *DB) userName(ctx context.Context, userID string) (string, error) {

@@ -23,8 +23,8 @@ import {
   DxInitiativesDocument,
   RagAnswerDocument,
   RagDocumentsDocument,
-  SendConsultMessageDocument,
-  SignContractDocument,
+  SaasModuleCode,
+  SaasModulesDocument,
 } from '@/lib/generated/graphql'
 import { graphQLErrorHint, isAuthRequiredGraphQLError } from '@/lib/graphql-errors'
 import { ui } from '@/lib/ui'
@@ -750,8 +750,27 @@ function RagModuleView() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [query, setQuery] = useState('')
+  const [openaiReady, setOpenaiReady] = useState<boolean | null>(null)
 
-  const { data, loading, error, refetch } = useQuery(RagDocumentsDocument, { fetchPolicy: 'network-only' })
+  const { data: modulesData } = useQuery(SaasModulesDocument, { fetchPolicy: 'cache-first' })
+  const ragEnabled =
+    modulesData?.saasModules?.some((m) => m.code === SaasModuleCode.DocRag && m.enabled) ?? true
+
+  useEffect(() => {
+    void fetch('/api/status', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { openai?: boolean } | null) => {
+        if (data && typeof data.openai === 'boolean') {
+          setOpenaiReady(data.openai)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const { data, loading, error, refetch } = useQuery(RagDocumentsDocument, {
+    fetchPolicy: 'network-only',
+    skip: !ragEnabled,
+  })
   const [fetchAnswer, { data: answerData, loading: answering, error: answerErr }] = useLazyQuery(
     RagAnswerDocument,
     { fetchPolicy: 'network-only' },
@@ -770,9 +789,25 @@ function RagModuleView() {
   const err = gqlError(error ?? answerErr ?? saveErr, ui.saasLoadFailed)
   const busy = answering || saving
 
+  if (!ragEnabled) {
+    return (
+      <div className="alert">
+        <p>文書検索 RAG は現在無効です。/saas で「文書検索 RAG」を有効化してください。</p>
+        <Link href="/saas" className="btn">
+          {ui.saasBack}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <>
       {err && <p className="alert">{err}</p>}
+      {openaiReady === false ? (
+        <p className="alert muted">
+          OPENAI_API_KEY 未設定のため、キーワード検索結果の表示のみ行います。AI 要約には /status を確認してください。
+        </p>
+      ) : null}
       <section className="saas-panel">
         <h2>{ui.saasRagAsk}</h2>
         <textarea
