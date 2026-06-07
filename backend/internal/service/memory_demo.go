@@ -66,7 +66,7 @@ func defaultSaasModuleCatalog() []models.SaasModule {
 		{Code: models.ModuleAttendance, Name: "\u52e4\u6020\u7ba1\u7406", Description: "\u51fa\u9000\u52e4\u30fb\u4f11\u6687\u7533\u8acb", Enabled: true},
 		{Code: models.ModuleEContract, Name: "\u96fb\u5b50\u5951\u7d04", Description: "\u5951\u7d04\u66f8\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u30fb\u7f72\u540d\u30d5\u30ed\u30fc", Enabled: true},
 		{Code: models.ModuleChatbot, Name: "AI\u30c1\u30e3\u30c3\u30c8\u30dc\u30c3\u30c8", Description: "\u6b6f\u79d1\u81e8\u5e8a\u30fb\u904b\u55b6\u76f8\u8ac7\u30a2\u30b7\u30b9\u30bf\u30f3\u30c8", Enabled: true},
-		{Code: models.ModuleDocRAG, Name: "\u6587\u66f8\u691c\u7d22RAG", Description: "\u9662\u5185\u6587\u66f8\u306e\u691c\u7d22\u30fbAI\u56de\u7b54", Enabled: false},
+		{Code: models.ModuleDocRAG, Name: "\u6587\u66f8\u691c\u7d22RAG", Description: "\u9662\u5185\u6587\u66f8\u306e\u691c\u7d22\u30fbAI\u56de\u7b54", Enabled: true},
 	}
 }
 

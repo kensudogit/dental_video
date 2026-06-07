@@ -756,7 +756,7 @@ function RagModuleView() {
 
   const { data: modulesData } = useQuery(SaasModulesDocument, { fetchPolicy: 'cache-first' })
   const ragEnabled =
-    modulesData?.saasModules?.some((m) => m.code === SaasModuleCode.DocRag && m.enabled) ?? true
+    modulesData?.saasModules?.some((m) => m.code === SaasModuleCode.DocRag && m.enabled) ?? false
 
   useEffect(() => {
     void fetch('/api/status', { cache: 'no-store' })
