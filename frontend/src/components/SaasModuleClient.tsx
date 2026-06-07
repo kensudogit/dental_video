@@ -55,6 +55,15 @@ function gqlError(err: { message?: string } | undefined, fallback: string) {
       ? 'この SaaS モジュールは無効です。/saas で有効化してください。'
       : ui.saasLoginHint
   }
+  if (
+    lower.includes('502') ||
+    lower.includes('503') ||
+    lower.includes('cannot reach api') ||
+    lower.includes('timed out') ||
+    lower.includes('timeout')
+  ) {
+    return 'API への接続がタイムアウトしました。AI 回答の生成には数十秒かかることがあります。しばらく待ってから再送してください。'
+  }
   return msg || graphQLErrorHint(err.message) || fallback
 }
 
@@ -662,15 +671,20 @@ function ChatModuleView() {
   }
 
   async function send() {
-    const res = await sendMessage({
-      variables: { message: input, threadId: activeThreadId },
-    })
-    setInput('')
-    const threadId = res.data?.sendConsultMessage.threadId
-    if (threadId) {
-      setActiveThreadId(threadId)
-      await refetchThreads()
-      await loadThread({ variables: { id: threadId } })
+    if (!input.trim() || sending) return
+    try {
+      const res = await sendMessage({
+        variables: { message: input, threadId: activeThreadId },
+      })
+      setInput('')
+      const threadId = res.data?.sendConsultMessage.threadId
+      if (threadId) {
+        setActiveThreadId(threadId)
+        await refetchThreads()
+        await loadThread({ variables: { id: threadId } })
+      }
+    } catch {
+      // sendErr に Apollo がエラーを載せる
     }
   }
 
@@ -738,7 +752,7 @@ function ChatModuleView() {
                 className="saas-textarea"
               />
               <button type="button" className="btn" disabled={sending || !input.trim()} onClick={() => void send()}>
-                {ui.saasChatSend}
+                {sending ? ui.boardAiBusy : ui.saasChatSend}
               </button>
             </div>
           </div>

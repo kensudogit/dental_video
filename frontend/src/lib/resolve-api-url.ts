@@ -14,9 +14,12 @@ export function isRailway(): boolean {
 }
 
 export function isUnifiedDeploy(): boolean {
-  return (
-    (process.env.UNIFIED_DEPLOY === '1' || process.env.UNIFIED_DEPLOY === 'true') && isRailway()
-  )
+  return unifiedDeployActive() && isRailway()
+}
+
+/** Dockerfile / start-unified.sh が UNIFIED_DEPLOY=1 を設定しているか */
+export function unifiedDeployActive(): boolean {
+  return process.env.UNIFIED_DEPLOY === '1' || process.env.UNIFIED_DEPLOY === 'true'
 }
 
 export function readApiUrlFromEnv(): string | undefined {
@@ -126,12 +129,15 @@ export function listApiBaseCandidates(): string[] {
     if (trimmed) seen.add(trimmed)
   }
 
+  // 統合デプロイは同一コンテナ内 API を最優先（外部 API_URL 誤設定でも 502 を防ぐ）
+  if (unifiedDeployActive()) {
+    add(unifiedInternalApiUrl())
+    add(`http://localhost:${process.env.API_INTERNAL_PORT?.trim() || '8081'}`)
+  }
+
   const external = externalApiUrlFromEnv()
   if (external) {
     add(external)
-  } else if (isUnifiedDeploy()) {
-    add(unifiedInternalApiUrl())
-    add(`http://localhost:${process.env.API_INTERNAL_PORT?.trim() || '8081'}`)
   }
 
   const explicit = readApiUrlFromEnv()
@@ -139,7 +145,7 @@ export function listApiBaseCandidates(): string[] {
     const normalized = normalizeApiUrl(explicit)
     if (normalized && !pointsToThisWebService(normalized)) {
       // Railway 本番で localhost API_URL は無効（統合デプロイ時を除く）
-      if (!(isRailway() && isLocalhostApi(normalized) && !isUnifiedDeploy())) {
+      if (!(isRailway() && isLocalhostApi(normalized) && !unifiedDeployActive())) {
         add(normalized)
       }
     }
@@ -149,7 +155,7 @@ export function listApiBaseCandidates(): string[] {
     add(railwayInternalApiUrl())
   }
 
-  if (!isUnifiedDeploy()) {
+  if (!unifiedDeployActive()) {
     add(localGatewayUrl())
     add(`http://localhost:${localGatewayPort()}`)
   }
@@ -162,7 +168,7 @@ export function resolveApiUrl(): string {
     return external
   }
 
-  if (isUnifiedDeploy()) {
+  if (unifiedDeployActive()) {
     return unifiedInternalApiUrl()
   }
 

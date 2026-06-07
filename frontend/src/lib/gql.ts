@@ -6,6 +6,8 @@ import { print } from 'graphql'
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
 
+const GQL_FETCH_TIMEOUT_MS = 120_000
+
 export class GraphQLClientError extends Error {
   constructor(
     message: string,
@@ -39,6 +41,7 @@ async function postGraphQL(body: string): Promise<Response> {
     },
     body,
     cache: 'no-store',
+    signal: AbortSignal.timeout(GQL_FETCH_TIMEOUT_MS),
   }
 
   // クライアントは Next プロキシ経由、サーバーは複数ベース URL をフォールバック

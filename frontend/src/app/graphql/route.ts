@@ -3,10 +3,12 @@
  * 同一オリジン /graphql で CORS・Cookie を維持する。
  */
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
-import { proxyToApiBases } from '@/lib/proxy-fetch'
+import { PROXY_TIMEOUT_GRAPHQL_POST_MS, PROXY_TIMEOUT_DEFAULT_MS, proxyToApiBases } from '@/lib/proxy-fetch'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+/** OpenAI 連携 mutation 向け（Railway / Next Route Handler） */
+export const maxDuration = 120
 
 function forwardAuthHeaders(request: Request, headers: Headers) {
   const contentType = request.headers.get('content-type')
@@ -40,6 +42,7 @@ async function proxy(request: Request): Promise<Response> {
       body: bodyText,
       cache: 'no-store',
     },
+    request.method === 'POST' ? PROXY_TIMEOUT_GRAPHQL_POST_MS : PROXY_TIMEOUT_DEFAULT_MS,
   )
 
   // 502 は GraphQL エラー形式に変換して返す

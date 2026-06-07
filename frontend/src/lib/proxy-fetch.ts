@@ -2,10 +2,15 @@
  * サーバー側プロキシ用 fetch（タイムアウト付き）。
  * auth / graphql ルートから Go API へ転送する際に使用。
  */
+export const PROXY_TIMEOUT_DEFAULT_MS = 15_000
+/** OpenAI 連携 mutation（チャット・RAG・AI Board）向け */
+export const PROXY_TIMEOUT_GRAPHQL_POST_MS = 120_000
+export const PROXY_TIMEOUT_AUTH_MS = 20_000
+
 export async function fetchUpstream(
   url: string,
   init: RequestInit = {},
-  timeoutMs = 8000,
+  timeoutMs = PROXY_TIMEOUT_DEFAULT_MS,
 ): Promise<Response> {
   return fetch(url, {
     ...init,
@@ -41,12 +46,13 @@ export async function proxyToApiBases(
   bases: string[],
   buildTarget: (base: string) => string,
   init: RequestInit,
+  timeoutMs = PROXY_TIMEOUT_DEFAULT_MS,
 ): Promise<Response> {
   const failures: string[] = []
   for (const base of bases) {
     const target = buildTarget(base)
     try {
-      const upstream = await fetchUpstream(target, init)
+      const upstream = await fetchUpstream(target, init, timeoutMs)
       return proxyUpstreamResponse(upstream)
     } catch (err) {
       failures.push(`${base}: ${err instanceof Error ? err.message : String(err)}`)

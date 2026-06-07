@@ -2,7 +2,7 @@
  * /auth/* を Go API 認証エンドポイントへプロキシ（ログイン Cookie 中継）。
  */
 import { listApiBaseCandidates } from '@/lib/resolve-api-url'
-import { proxyToApiBases } from '@/lib/proxy-fetch'
+import { PROXY_TIMEOUT_AUTH_MS, proxyToApiBases } from '@/lib/proxy-fetch'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,6 +38,7 @@ async function proxyAuth(request: Request, path: string[]): Promise<Response> {
       body: bodyText,
       cache: 'no-store',
     },
+    PROXY_TIMEOUT_AUTH_MS,
   )
 }
 
