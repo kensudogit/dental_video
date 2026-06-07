@@ -84,6 +84,14 @@ function normalizeApiUrl(raw: string): string {
   return `https://${trimmed}`
 }
 
+function localGatewayPort(): string {
+  return process.env.GATEWAY_HOST_PORT?.trim() || '8080'
+}
+
+function localGatewayUrl(): string {
+  return `http://127.0.0.1:${localGatewayPort()}`
+}
+
 function unifiedInternalApiUrl(): string {
   const port = process.env.API_INTERNAL_PORT?.trim() || '8081'
   return `http://127.0.0.1:${port}`
@@ -142,8 +150,8 @@ export function listApiBaseCandidates(): string[] {
   }
 
   if (!isUnifiedDeploy()) {
-    add(resolveApiUrl())
-    add('http://localhost:8080')
+    add(localGatewayUrl())
+    add(`http://localhost:${localGatewayPort()}`)
   }
   return [...seen]
 }
@@ -173,7 +181,7 @@ export function resolveApiUrl(): string {
     return railwayInternalApiUrl()
   }
 
-  return 'http://localhost:8080'
+  return localGatewayUrl()
 }
 
 export function isProductionDeploy(): boolean {
@@ -229,5 +237,5 @@ export function graphQLConnectionHint(): string {
     return 'Tried ' + target + '. Set API_URL to the API public HTTPS URL.'
   }
 
-  return 'Local: run npm run dev from repository root so api (:8080) and web (:3000) both start.'
+  return 'Local: run npm run dev from repository root, or docker compose up --build (Web :3001, Gateway :18080).'
 }

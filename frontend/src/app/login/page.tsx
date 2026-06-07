@@ -47,6 +47,12 @@ export default function LoginPage() {
     } catch (err) {
       if (err instanceof Error && err.name === 'TimeoutError') {
         setError('Login timed out. Check /status and DATABASE_URL on Railway, then retry.')
+      } else if (err instanceof Error && err.message === 'Failed to fetch') {
+        setError(
+          isLocalHost
+            ? 'API に接続できません。Docker の場合は npm run docker:up で Web(:3001) を再ビルドし、Gateway http://localhost:18080/health を確認してください。'
+            : 'API に接続できません。/status で接続状態を確認してください。',
+        )
       } else {
         setError(err instanceof Error ? err.message : 'Login failed')
       }

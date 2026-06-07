@@ -156,6 +156,7 @@ services:
       JWT_SECRET: dev-docker-change-me
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SAAS_MONOLITH: "true"
       S3_ENDPOINT: http://minio:9000
       S3_REGION: auto
       S3_BUCKET: dental-video
@@ -197,6 +198,8 @@ services:
       - "${WEB_HOST_PORT:-3001}:3000"
     environment:
       API_URL: http://api:8080
+      GATEWAY_HOST_PORT: ${GATEWAY_HOST_PORT:-18080}
+      WEB_HOST_PORT: ${WEB_HOST_PORT:-3001}
       NEXT_PUBLIC_WS_URL: ws://localhost:${GATEWAY_HOST_PORT:-18080}/graphql
     depends_on:
       - api

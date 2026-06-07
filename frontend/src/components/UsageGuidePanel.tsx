@@ -121,7 +121,7 @@ const L = {
       items: [
         'cp .env.example .env → OPENAI_API_KEY（AI Board / Chat / RAG）',
         'npm run docker:up',
-        'Web http://localhost:3000 · GraphiQL http://localhost:8080/graphiql',
+        'Web http://localhost:3001 · Gateway http://localhost:18080/graphql',
         'Gateway env: SAAS_DX_URL … SAAS_RAG_URL（compose 内 DNS）',
         '停止: npm run docker:down',
       ],
