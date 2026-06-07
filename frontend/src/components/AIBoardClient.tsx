@@ -5,6 +5,7 @@
  */
 import { useMutation, useQuery } from '@apollo/client/react'
 import { useState } from 'react'
+import { IconRefresh, IconSpark } from '@/components/ui/ButtonIcons'
 import {
   BoardAnalyticsPageDocument,
   GenerateAnalyticsInsightDocument,
@@ -38,17 +39,21 @@ export function AIBoardClient() {
             <option value={90}>{ui.days(90)}</option>
           </select>
         </label>
-        <button type="button" className="btn secondary" onClick={() => refetch()} disabled={loading}>
-          {ui.boardRefresh}
-        </button>
-        <button
-          type="button"
-          className="btn"
-          disabled={aiBusy}
-          onClick={() => generate({ variables: { periodDays } })}
-        >
-          {aiBusy ? ui.boardAiBusy : ui.boardAiGenerate}
-        </button>
+        <div className="btn-group">
+          <button type="button" className="btn btn-secondary" onClick={() => refetch()} disabled={loading}>
+            <IconRefresh />
+            {ui.boardRefresh}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ai"
+            disabled={aiBusy}
+            onClick={() => generate({ variables: { periodDays } })}
+          >
+            <IconSpark />
+            {aiBusy ? ui.boardAiBusy : ui.boardAiGenerate}
+          </button>
+        </div>
       </div>
 
       {board ? (

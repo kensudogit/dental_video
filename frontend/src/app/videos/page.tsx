@@ -1,6 +1,7 @@
 /** 動画ライブラリ一覧（カテゴリ・難易度・検索・ページング）。 */
 import Link from 'next/link'
 import { VideoCard } from '@/components/VideoCard'
+import { IconSearch } from '@/components/ui/ButtonIcons'
 import {
   VideosPageDocument,
   type VideoCategory,
@@ -72,14 +73,10 @@ export default async function VideosPage({
         </div>
       ) : null}
 
-      <form className="filters" action="/videos" method="get">
-        <input
-          name="search"
-          placeholder={ui.searchPlaceholder}
-          defaultValue={search}
-          style={{ padding: '0.4rem 0.75rem', borderRadius: 8, border: '1px solid var(--border)' }}
-        />
+      <form className="search-bar" action="/videos" method="get">
+        <input name="search" placeholder={ui.searchPlaceholder} defaultValue={search} />
         <button type="submit" className="btn">
+          <IconSearch />
           {ui.search}
         </button>
       </form>
@@ -118,13 +115,13 @@ export default async function VideosPage({
       </div>
 
       {pageInfo.totalPages > 1 ? (
-        <div className="filters" style={{ marginTop: '1rem' }}>
+        <div className="pagination-bar">
           {page > 1 ? (
             <Link href={`/videos${q({ page: String(page - 1) })}`} className="filter-link">
               {ui.prev}
             </Link>
           ) : null}
-          <span style={{ alignSelf: 'center', fontSize: '0.85rem', color: 'var(--muted)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--muted)', padding: '0 0.25rem' }}>
             {ui.pageOf(pageInfo.page, pageInfo.totalPages, pageInfo.total)}
           </span>
           {page < pageInfo.totalPages ? (

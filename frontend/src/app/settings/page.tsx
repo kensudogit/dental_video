@@ -6,6 +6,7 @@
  */
 import { useMutation, useQuery } from '@apollo/client/react'
 import Link from 'next/link'
+import { IconArrowRight, IconSave } from '@/components/ui/ButtonIcons'
 import {
   CurrentSessionDocument,
   OrganizationSettingsDocument,
@@ -118,9 +119,12 @@ export default function SettingsPage() {
             <p className="muted small">
               Plan: {org.planTier} / {org.subscriptionStatus} / members {org.memberCount}
             </p>
-            <button type="submit" className="btn" disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+            <div className="form-actions">
+              <button type="submit" className="btn" disabled={saving}>
+                <IconSave />
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
           </form>
 
           {usage ? (
@@ -159,9 +163,12 @@ export default function SettingsPage() {
                 ))}
               </ul>
               <p className="muted small">{ui.saasToggleHint}</p>
-              <Link href="/saas" className="btn outline" style={{ marginTop: '0.75rem' }}>
-                {ui.navSaas}
-              </Link>
+              <div className="form-actions" style={{ borderTop: 'none', paddingTop: 0 }}>
+                <Link href="/saas" className="btn btn-outline">
+                  {ui.navSaas}
+                  <IconArrowRight />
+                </Link>
+              </div>
             </section>
           ) : null}
 
