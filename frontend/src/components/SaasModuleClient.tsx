@@ -25,6 +25,8 @@ import {
   RagDocumentsDocument,
   SaasModuleCode,
   SaasModulesDocument,
+  SendConsultMessageDocument,
+  SignContractDocument,
 } from '@/lib/generated/graphql'
 import { graphQLErrorHint, isAuthRequiredGraphQLError } from '@/lib/graphql-errors'
 import { ui } from '@/lib/ui'

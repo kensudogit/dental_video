@@ -487,30 +487,3 @@ func (db *DB) userName(ctx context.Context, userID string) (string, error) {
 	err := db.Pool.QueryRow(ctx, `SELECT name FROM users WHERE id=$1`, userID).Scan(&name)
 	return name, err
 }
-
-func snippet(content, query string, max int) string {
-	lower := strings.ToLower(content)
-	idx := strings.Index(lower, strings.ToLower(query))
-	if idx < 0 {
-		if len(content) <= max {
-			return content
-		}
-		return content[:max] + "..."
-	}
-	start := idx - max/4
-	if start < 0 {
-		start = 0
-	}
-	end := start + max
-	if end > len(content) {
-		end = len(content)
-	}
-	s := content[start:end]
-	if start > 0 {
-		s = "..." + s
-	}
-	if end < len(content) {
-		s += "..."
-	}
-	return s
-}
