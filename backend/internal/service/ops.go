@@ -264,11 +264,7 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 	if s.PG == nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, tenant.ErrForbidden
 	}
-	oid, err := s.OrgID(ctx)
-	if err != nil {
-		return models.ConsultationMessage{}, models.ConsultationMessage{}, err
-	}
-	uid, err := s.UserID(ctx)
+	oid, uid, _, err := s.consultScope(ctx)
 	if err != nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 	}
@@ -279,12 +275,14 @@ func (s *Service) SendConsultation(ctx context.Context, threadID, message string
 			return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 		}
 		threadID = t.ID
+	} else if err := s.PG.VerifyConsultThreadAccess(ctx, oid, uid, threadID); err != nil {
+		return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 	}
 	userMsg, err := s.PG.AddConsultMessage(ctx, oid, threadID, "user", message)
 	if err != nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, err
 	}
-	_, msgs, err := s.PG.GetConsultThread(ctx, oid, threadID)
+	_, msgs, err := s.PG.GetConsultThread(ctx, oid, uid, threadID, false)
 	if err != nil {
 		return userMsg, models.ConsultationMessage{}, err
 	}
@@ -309,15 +307,11 @@ func (s *Service) ListConsultThreads(ctx context.Context) ([]models.Consultation
 	if s.PG == nil {
 		return nil, nil
 	}
-	oid, err := s.OrgID(ctx)
+	oid, uid, orgWide, err := s.consultScope(ctx)
 	if err != nil {
 		return nil, err
 	}
-	uid, err := s.UserID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return s.PG.ListConsultThreads(ctx, oid, uid)
+	return s.PG.ListConsultThreads(ctx, oid, uid, orgWide)
 }
 
 func (s *Service) GetConsultThread(ctx context.Context, threadID string) (models.ConsultationThread, []models.ConsultationMessage, error) {
@@ -327,10 +321,10 @@ func (s *Service) GetConsultThread(ctx context.Context, threadID string) (models
 	if s.PG == nil {
 		return models.ConsultationThread{}, nil, tenant.ErrForbidden
 	}
-	oid, err := s.OrgID(ctx)
+	oid, uid, orgWide, err := s.consultScope(ctx)
 	if err != nil {
 		return models.ConsultationThread{}, nil, err
 	}
-	return s.PG.GetConsultThread(ctx, oid, threadID)
+	return s.PG.GetConsultThread(ctx, oid, uid, threadID, orgWide)
 }
 

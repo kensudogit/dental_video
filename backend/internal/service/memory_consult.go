@@ -35,14 +35,19 @@ func (s *Service) memoryListConsultThreads(ctx context.Context) ([]models.Consul
 	if err != nil {
 		return nil, err
 	}
+	orgWide := consultOrgWide(p)
 	store := s.memoryConsult()
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	out := make([]models.ConsultationThread, 0)
 	for _, t := range store.threads {
-		if t.OrgID == p.OrgID && t.UserID == p.UserID {
-			out = append(out, t)
+		if t.OrgID != p.OrgID {
+			continue
 		}
+		if !orgWide && t.UserID != p.UserID {
+			continue
+		}
+		out = append(out, t)
 	}
 	return out, nil
 }
@@ -52,11 +57,12 @@ func (s *Service) memoryGetConsultThread(ctx context.Context, threadID string) (
 	if err != nil {
 		return models.ConsultationThread{}, nil, err
 	}
+	orgWide := consultOrgWide(p)
 	store := s.memoryConsult()
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	t, ok := store.threads[threadID]
-	if !ok || t.OrgID != p.OrgID || t.UserID != p.UserID {
+	if !ok || t.OrgID != p.OrgID || (!orgWide && t.UserID != p.UserID) {
 		return models.ConsultationThread{}, nil, tenant.ErrForbidden
 	}
 	return t, append([]models.ConsultationMessage(nil), store.messages[threadID]...), nil

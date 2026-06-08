@@ -34,7 +34,8 @@ func (h *handler) listThreads(w http.ResponseWriter, r *http.Request) {
 	if base.WriteSvcErr(w, err) {
 		return
 	}
-	list, err := h.db.ListConsultThreads(r.Context(), p.OrgID, p.UserID)
+	orgWide := p.Role == "OWNER" || p.Role == "ADMIN"
+	list, err := h.db.ListConsultThreads(r.Context(), p.OrgID, p.UserID, orgWide)
 	if base.WriteSvcErr(w, err) {
 		return
 	}
@@ -47,7 +48,8 @@ func (h *handler) getThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := chi.URLParam(r, "id")
-	thread, msgs, err := h.db.GetConsultThread(r.Context(), p.OrgID, id)
+	orgWide := p.Role == "OWNER" || p.Role == "ADMIN"
+	thread, msgs, err := h.db.GetConsultThread(r.Context(), p.OrgID, p.UserID, id, orgWide)
 	if base.WriteSvcErr(w, err) {
 		return
 	}
@@ -83,12 +85,14 @@ func (h *handler) consult(ctx context.Context, oid, uid, threadID, message strin
 			return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
 		}
 		threadID = t.ID
+	} else if err := h.db.VerifyConsultThreadAccess(ctx, oid, uid, threadID); err != nil {
+		return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
 	}
 	userMsg, err := h.db.AddConsultMessage(ctx, oid, threadID, "user", message)
 	if err != nil {
 		return models.ConsultationMessage{}, models.ConsultationMessage{}, "", err
 	}
-	_, msgs, err := h.db.GetConsultThread(ctx, oid, threadID)
+	_, msgs, err := h.db.GetConsultThread(ctx, oid, uid, threadID, false)
 	if err != nil {
 		return userMsg, models.ConsultationMessage{}, threadID, err
 	}
